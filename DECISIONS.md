@@ -111,7 +111,7 @@
 **Outcome:** applied
 **Ref:** (this commit); coding-agent Q374, Q375
 
-## Q11 — interactive/purelymail-cli — gate-resolution
+## Q12 — interactive/purelymail-cli — gate-resolution
 
 **Question:** How does the `purelymail` CLI (github.com/soulmachine/purelymail, Frank's Rust tool for the Purelymail API) reach every personal host, and where do its credentials live?
 **Options considered:** `cargo install purelymail` on each host / a role that installs the GitHub release tarball into `~/.local/bin` / by hand over ssh with nothing in the playbook
