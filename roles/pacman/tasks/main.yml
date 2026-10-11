@@ -105,4 +105,4 @@
     name: pacman
     tasks_from: aur
   vars:
-    aur_pkg: sublime-text-4
+    pacman_aur_pkg: sublime-text-4

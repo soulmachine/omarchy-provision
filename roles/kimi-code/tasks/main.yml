@@ -6,7 +6,7 @@
     name: pacman
     tasks_from: aur
   vars:
-    aur_pkg: kimi-code-bin
+    pacman_aur_pkg: kimi-code-bin
 
 - name: Add kimi-yolo alias to .bashrc
   ansible.builtin.lineinfile:
