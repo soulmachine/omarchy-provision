@@ -1,0 +1,9 @@
+---
+# `role-name` rejects a hyphen in a role directory name (`^[a-z][a-z0-9_]*$`). The
+# hyphenated roles here (claude-code, agent-reach, multica-cli, playwright-cli, ...)
+# keep the names of the tools they install, which appear in main.yml, in every
+# meta/main.yml, in the docs and in the ad-hoc form
+# `ansible localhost -m include_role -a name=claude-code`. The rule is skipped, not
+# obeyed, so that `ansible-lint` exits 0 on a clean tree and a NEW finding is visible.
+skip_list:
+  - role-name

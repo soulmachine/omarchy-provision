@@ -1,0 +1,108 @@
+---
+# The analogue of the Mac `homebrew` role: upgrade everything first, then the base packages.
+#
+# The upgrade is `omarchy-update -y`, not a bare `pacman -Syu` (DECISIONS Q2). Omarchy's own
+# update runs its migrations straight after the package upgrade and says the two must not be
+# separated; its pacman call also needs `--overwrite '/usr/share/omarchy/*'`. One call covers
+# the repos, AUR (`yay -Sua`), the mise tools, orphans and the keyring. On a host where nothing
+# is outdated it takes under a minute. It never reboots; the notice at the end says when one
+# is due. `omarchy-update` re-runs itself under `script`, so its full output is in
+# /tmp/omarchy-update.log.
+- name: Read the package and mise state before updating
+  ansible.builtin.shell: pacman -Q && mise ls --json
+  register: pacman_state_before
+  changed_when: false
+  check_mode: false
+
+# A failure is recorded, not raised: this is the first role, and one package that cannot
+# upgrade must not skip the 38 roles after it. main.yml's post_tasks fail the play on the
+# recorded message.
+- name: Update Omarchy, system packages, AUR packages and mise tools
+  ansible.builtin.command: omarchy-update -y
+  register: pacman_update
+  changed_when: false
+  failed_when: false
+
+- name: Record that the Omarchy update failed
+  ansible.builtin.set_fact:
+    pacman_upgrade_failed: >-
+      `omarchy-update -y` exited {{ pacman_update.rc }}, so packages already installed may
+      not be current. Its log is /tmp/omarchy-update.log; its last lines were:
+      {{ pacman_update.stdout_lines[-5:] | join(' / ') }}
+  when: pacman_update.rc != 0
+
+- name: Report that the Omarchy update failed
+  ansible.builtin.debug:
+    msg: "{{ pacman_upgrade_failed }}"
+  when: pacman_upgrade_failed is defined
+
+- name: Check whether the update changed anything
+  ansible.builtin.shell: pacman -Q && mise ls --json
+  register: pacman_state_after
+  changed_when: pacman_state_after.stdout != pacman_state_before.stdout
+
+# The three conditions omarchy-update-restart reboots on. It asks through gum, which no
+# unattended run can answer; the Sunday wrapper in the always-on role reboots on the same
+# three. The play only says so.
+- name: Check whether a reboot is due
+  ansible.builtin.shell: |
+    set -o pipefail
+    [[ -f "$HOME/.local/state/omarchy/reboot-required" ]] && exit 0
+    pacman -Qqo "/usr/lib/modules/$(uname -r)/vmlinuz" &>/dev/null || exit 0
+    readlink "/proc/$(pgrep -x Hyprland)/exe" 2>/dev/null | grep -q deleted && exit 0
+    exit 1
+  args:
+    executable: /bin/bash
+  register: pacman_reboot_due
+  changed_when: false
+  failed_when: false
+  check_mode: false
+
+- name: Report that a reboot is due
+  ansible.builtin.debug:
+    msg: >-
+      A reboot is due (new kernel, new Hyprland, or Omarchy's reboot-required flag). The play
+      never reboots. Run `sudo systemctl reboot` when convenient, or wait for the Sunday
+      omarchy-weekly-update, which reboots on the same conditions.
+  when: pacman_reboot_due.rc == 0
+
+# The Mac list minus gh, which is Omarchy's mise tool here.
+- name: Install the base packages
+  become: true
+  community.general.pacman:
+    name:
+      - git
+      - curl
+      - wget
+      - jq
+      - ripgrep
+      - fd
+      - tree
+      - htop
+      - docker
+      - ffmpeg
+      - gnupg
+      - tmux
+    state: present
+
+# Of the Mac casks, the two with a Linux build. Omarchy's VS Code installer also turns off its
+# self-updater and applies the theme, and rewrites those files unconditionally, so it runs
+# once. Claude desktop, Gemini, pearcleaner and ChatGPT have no Linux build.
+- name: Check whether VS Code is installed
+  ansible.builtin.command: pacman -Q visual-studio-code-bin
+  register: pacman_vscode
+  changed_when: false
+  failed_when: false
+  check_mode: false
+
+- name: Install VS Code with Omarchy's installer
+  ansible.builtin.command: omarchy-install-editor-vscode
+  when: pacman_vscode.rc != 0
+  changed_when: true
+
+# yay, so no become: yay refuses root and calls sudo itself.
+- name: Install Sublime Text from AUR
+  community.general.pacman:
+    name: sublime-text-4
+    state: present
+    executable: yay

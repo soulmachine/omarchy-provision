@@ -1,0 +1,38 @@
+---
+# mise is Omarchy's (pacman `mise-bin`), and `mise self-update` refuses a package-managed
+# install, so there is nothing to update here but the tools. One `mise up` covers all of them
+# (grilling Q29): the same call `omarchy-update-mise` makes, so in a full play this is a no-op
+# right after the pacman role, and it is what keeps a single-role run current. Each tool role
+# only adds its tool when missing, through tasks/tool.yml.
+#
+# MISE_MINIMUM_RELEASE_AGE=0: mise withholds releases younger than its cooldown; Omarchy's
+# stubs and its update both clear it to get today's version. GITHUB_API_TOKEN: the github:*
+# backends and the release lookups share the anonymous 60-calls-an-hour GitHub budget with
+# every other tool on the box. no_log because of that token.
+- name: Read the mise tools before updating
+  ansible.builtin.command: mise ls --json
+  register: mise_tools_before
+  changed_when: false
+  check_mode: false
+
+- name: Update every mise tool
+  ansible.builtin.command: mise up
+  environment:
+    MISE_MINIMUM_RELEASE_AGE: "0"
+    GITHUB_API_TOKEN: "{{ lookup('env', 'GITHUB_TOKEN') }}"
+  register: mise_up
+  changed_when: false
+  failed_when: false
+  no_log: true
+
+- name: Check whether any mise tool was updated
+  ansible.builtin.command: mise ls --json
+  register: mise_tools_after
+  changed_when: mise_tools_after.stdout != mise_tools_before.stdout
+
+- name: Warn that mise could not update every tool
+  ansible.builtin.debug:
+    msg:
+      - "`mise up` exited {{ mise_up.rc }}; the installed tools keep working, but one or more may be behind."
+      - "Most likely the GitHub API rate limit. Run `mise up` by hand to see mise's own error."
+  when: mise_up.rc != 0

@@ -1,0 +1,16 @@
+---
+# kimi-code-bin from AUR; the command is `kimi`. `yay -Sua` inside omarchy-update keeps it
+# current, which the Mac role's curl installer never did (macbook-provision Q187).
+# yay, so no become: yay refuses root and calls sudo itself.
+- name: Install kimi-code from AUR
+  community.general.pacman:
+    name: kimi-code-bin
+    state: present
+    executable: yay
+
+- name: Add kimi-yolo alias to .bashrc
+  ansible.builtin.lineinfile:
+    path: "{{ lookup('env', 'HOME') }}/.bashrc"
+    line: 'alias kimi-yolo="kimi --yolo"'
+    regexp: '^alias kimi-yolo='
+    state: present

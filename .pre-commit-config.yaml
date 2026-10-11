@@ -1,0 +1,27 @@
+---
+# Every hook is `repo: local`: each checks this repo's own invariants and has no upstream.
+# `pre-commit install` writes .git/hooks/pre-commit, which git does not carry, so each
+# clone runs that once. Same three gates as macbook-provision.
+repos:
+  - repo: local
+    hooks:
+      - id: ansible-lint
+        name: ansible-lint (production profile)
+        entry: ansible-lint
+        language: system
+        pass_filenames: false
+        files: \.(yml|yaml)$
+
+      - id: decisions-numbering
+        name: DECISIONS.md numbering is continuous
+        entry: scripts/check-decisions-numbering.sh
+        language: script
+        pass_filenames: false
+        files: ^DECISIONS\.md$
+
+      - id: readme-roles
+        name: README role table matches main.yml
+        entry: scripts/check-readme-roles.sh
+        language: script
+        pass_filenames: false
+        files: ^(README\.md|main\.yml|roles/)

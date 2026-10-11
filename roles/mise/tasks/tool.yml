@@ -1,0 +1,38 @@
+---
+# Ensure one mise tool, Omarchy's way. A tool role includes this with
+#
+#   - ansible.builtin.include_role:
+#       name: mise
+#       tasks_from: tool
+#     vars:
+#       mise_tool: "npm:@playwright/cli"   # what `mise ls` lists
+#       mise_cmd: playwright-cli           # optional: the stub omarchy-mise-install writes
+#       mise_bin: playwright-cli           # optional: the executable in the package, if not mise_cmd
+#
+# The stub in ~/.local/bin is the shape Omarchy gives its own agents: it runs `mise use -g`
+# then `mise x`, so the first call installs the tool. Upgrades are the mise role's `mise up`.
+- name: Read the mise tools
+  ansible.builtin.command: mise ls --json
+  register: mise_tool_ls
+  changed_when: false
+  check_mode: false
+
+# Gated on an INSTALLED entry: a tool that is in config.toml but was never installed lists
+# with `installed: false`, and `mise use -g` installs it. no_log for the GitHub token; the
+# task name says what to run by hand on a failure.
+- name: Add the mise tool {{ mise_tool }}
+  ansible.builtin.command: mise use -g --quiet {{ mise_tool }}@latest
+  environment:
+    MISE_MINIMUM_RELEASE_AGE: "0"
+    GITHUB_API_TOKEN: "{{ lookup('env', 'GITHUB_TOKEN') }}"
+  when: >-
+    (mise_tool_ls.stdout | from_json)[mise_tool] | default([])
+    | selectattr('installed') | list | length == 0
+  changed_when: true
+  no_log: true
+
+- name: Write the stub for {{ mise_cmd | default(mise_tool) }}
+  ansible.builtin.command: omarchy-mise-install {{ mise_tool }} {{ mise_cmd }} {{ mise_bin | default(mise_cmd) }}
+  args:
+    creates: "{{ lookup('env', 'HOME') }}/.local/bin/{{ mise_cmd }}"
+  when: mise_cmd is defined

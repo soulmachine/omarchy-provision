@@ -1,0 +1,100 @@
+---
+- name: Install all
+  hosts: all
+  gather_facts: true
+  become: false
+
+  # The macbook-provision order minus the roles Omarchy makes moot (host-facts, shell,
+  # omarchy) and the ones with no Linux build (apple-container, cua, cmux, moshi, cc-switch).
+  # Every Omarchy host is an always-on server, so nothing here is gated on the machine.
+  roles:
+    - pacman
+    - github
+    - direnv
+    - dotenv
+    - uv
+    - python
+    - mise
+    - go
+    - nodejs
+    - bun
+    - rust
+    - jdk
+    - claude-code
+    - claude-extras
+    - typesafe
+    - codex
+    - opencode
+    - kimi-code
+    - omp
+    - pi
+    - agent-sync
+    - skills
+    - agent-reach
+    - playwright
+    - playwright-cli
+    - intellij-idea
+    - claude-mem
+    - hermes
+    - ponytail
+    - role: paseo
+      tags: [agent-multiplexer]
+    - ghostty
+    - obsidian
+    - cloudflare
+    - multica-cli
+    - tailscale
+    - role: zellij
+      tags: [terminal-multiplexer]
+    - role: tmux
+      tags: [terminal-multiplexer]
+    - role: herdr
+      tags: [terminal-multiplexer]
+    - always-on
+
+  # Failures that should be loud without being obstructive land here, after every role has
+  # run. A `fail` inside an early role stops every role after it, and a renamed skill or a
+  # package that cannot upgrade is not worth that. Each role also prints its own message
+  # where it happens; the recap still ends with `failed=1`.
+  post_tasks:
+    - name: Fail when the Omarchy update failed
+      ansible.builtin.fail:
+        msg: "{{ pacman_upgrade_failed }}"
+      when: pacman_upgrade_failed is defined
+
+    - name: Fail when a pinned skill could not be installed
+      ansible.builtin.fail:
+        msg: >-
+          `skills add` could not install every pinned skill:
+          {{ skills_partial_failures | join('; ') }}.
+          The usual cause is a rename or withdrawal upstream. List what the source actually
+          ships with `npx skills@latest add <source> -l` (it installs nothing), then correct
+          the name in roles/skills/vars/main.yml, or drop the entry if the skill is gone.
+      when: skills_partial_failures | default([]) | length > 0
+
+    # Not merged with the one above: this cannot be repaired by re-running. `agent-sync sync`
+    # treats conflict and foreign as no-ops, so a human has to edit the file.
+    - name: Fail when an agent's instruction wiring is not intact
+      ansible.builtin.fail:
+        msg: >-
+          These agents no longer reach ~/.agents/AGENTS.md:
+          {{ skills_wiring_broken | join('; ') }}.
+          `agent-sync status` without `--json` names the file and the diagnosis; fix it by
+          hand. An agent meant to keep its own instructions is dropped from the survey with
+          `targets.<agent> = false` in agent-sync.toml.
+      when: skills_wiring_broken | default([]) | length > 0
+
+    - name: Fail when a self-authored skill could not be adopted
+      ansible.builtin.fail:
+        msg: >-
+          `agent-sync adopt` refused these paths: {{ skills_adopt_failed | join('; ') }}.
+          The usual cause is two REAL skills of the same name in different roots. Run the
+          same `agent-sync adopt` by hand to see the refusal in full.
+      when: skills_adopt_failed | default([]) | length > 0
+
+    # Tagged like the role, so a `--tags agent-multiplexer` run reports it too.
+    - name: Fail when the Paseo daemon is not running
+      ansible.builtin.fail:
+        msg: "{{ paseo_daemon_down }}"
+      when: paseo_daemon_down is defined
+      tags: [agent-multiplexer]
