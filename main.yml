@@ -7,6 +7,8 @@
   # The macbook-provision order minus the roles Omarchy makes moot (host-facts, shell,
   # omarchy), the ones with no Linux build (apple-container, cua, cmux, moshi, cc-switch) and
   # the ones a headless host has no use for (intellij-idea, kimi-code; DECISIONS Q10).
+  # Of the agents Omarchy offers, Cursor CLI and Muse Code are left out: they cannot reach
+  # CLIProxyAPI (DECISIONS Q11).
   # Every Omarchy host is an always-on server, so nothing here is gated on the machine.
   roles:
     - pacman
@@ -28,6 +30,11 @@
     - opencode
     - omp
     - pi
+    - copilot
+    - crush
+    - gemini
+    - grok
+    - openclaw
     - agent-sync
     - skills
     - agent-reach

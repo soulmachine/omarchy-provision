@@ -1,0 +1,12 @@
+---
+# GitHub Copilot CLI is Omarchy's mise tool (aqua `github/copilot-cli`) with its
+# ~/.local/bin/copilot stub; the mise role's `mise up` keeps it current. The gateway half is not
+# here: `copilot-gw`, which Omarchy's patched launcher starts, comes from `cliproxy-tier <host>`
+# on mac-mini-m2, which configures only installed agents (coding-agent Q374).
+- name: Ensure GitHub Copilot CLI is installed through mise
+  ansible.builtin.include_role:
+    name: mise
+    tasks_from: tool
+  vars:
+    mise_tool: copilot
+    mise_cmd: copilot

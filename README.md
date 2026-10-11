@@ -117,6 +117,11 @@ pre-commit run --all-files
 | opencode | OpenCode CLI（Omarchy 的 mise 工具 `opencode`）；并用 `npx oh-my-openagent` 写入 `~/.config/opencode/opencode.json`，由版本戳门控，避免每次 play 重装（依赖 nodejs） |
 | omp | oh-my-pi（Omarchy 的 mise 工具，命令 `omp`） |
 | pi | pi coding agent（Omarchy 的 mise 工具 `pi`），并下发 `~/.pi/agent/settings.json` |
+| copilot | GitHub Copilot CLI（Omarchy 的 mise 工具 `copilot`）；走网关用的 `copilot-gw` 由 m2 上的 `cliproxy-tier` 写入 |
+| crush | Crush（Charm，Omarchy 的 mise 工具 `crush`）；`~/.config/crush/crushrc` 里的网关 provider 由 `cliproxy-tier` 写入 |
+| gemini | Gemini CLI（Omarchy 的 mise 工具 `gemini`）；`gemini-gw` 与 `~/.gemini/settings.json` 由 `cliproxy-tier` 写入（依赖 nodejs） |
+| grok | Grok CLI（Omarchy 的 mise 工具 `npm:@xai-official/grok`）；`~/.grok/config.toml` 里的网关模型由 `cliproxy-tier` 写入（依赖 nodejs） |
+| openclaw | OpenClaw：`omarchy-install-openclaw-cli`（pacman `openclaw`）；不做 onboarding，未 onboarding 时只打印提示 |
 | agent-sync | GitHub release 的二进制放到 `~/.local/bin/agent-sync`（AUR 只有过期的 0.1.0）；把 `~/.agents/` 扇出到各 agent；并托管每晚 02:17 的 `agent-sync sync` cron |
 | skills | 用 `npx skills@latest add` 安装整源与只取指定技能的源，并扇出到各 agent 的 skills 目录；详见下文「Agent CLI 与技能」（依赖 claude-code、codex） |
 | agent-reach | 多渠道触达工具；上游只提供面向 AI agent 的安装文档，故由 `claude-gw -p` 按文档驱动安装。`~/.local/bin/claude-gw` 由 mac-mini-m2 上的 `cliproxy-tier` 写入，缺失时 role 报错而**不自行创建**（依赖 claude-code、python） |
@@ -153,7 +158,7 @@ macbook-provision 里没有移植的 role：`host-facts`、`shell`、`omarchy`�
 
 #### 安装渠道
 
-和 Mac 上五花八门的渠道不同，这里全是 mise，因为 Omarchy 自己就是这么装它们的：
+和 Mac 上五花八门的渠道不同，这里几乎全是 mise，因为 Omarchy 自己就是这么装它们的（OpenClaw 例外，它是 Omarchy 仓库里的 pacman 包）：
 
 | 工具 | 安装渠道 | 落地位置 / 命令名 |
 |------|----------|-------------------|
@@ -162,11 +167,18 @@ macbook-provision 里没有移植的 role：`host-facts`、`shell`、`omarchy`�
 | opencode | mise `opencode` | stub `~/.local/bin/opencode` |
 | omp | mise（GitHub release） | stub `~/.local/bin/omp` |
 | pi | mise `pi` | stub `~/.local/bin/pi` |
+| copilot | mise `copilot`（aqua） | stub `~/.local/bin/copilot` |
+| crush | mise `crush`（aqua） | stub `~/.local/bin/crush` |
+| gemini | mise `gemini`（npm） | stub `~/.local/bin/gemini` |
+| grok | mise `npm:@xai-official/grok` | stub `~/.local/bin/grok`；首次运行时原生二进制下载到 `~/.grok/bin` |
+| openclaw | `omarchy-install-openclaw-cli`（pacman `openclaw`） | `/usr/bin/openclaw` |
 | hermes | `omarchy-install-hermes-cli`（mise pipx） | `~/.local/bin/hermes` |
 | claude-mem | `npx -y claude-mem install` | 不是独立命令，而是 Claude Code 插件，同时接线 codex-cli 和 opencode |
 | agent-reach | **没有包管理器**，见下 | 由 `claude-gw -p` 按上游文档安装 |
 
 stub 是 `omarchy-mise-install` 写的那种：先 `mise use -g`、再 `mise x`，第一次调用时装好工具。**升级统一由 `mise` role 的一次 `mise up` 完成**，各工具 role 没有自己的 update 步骤。
+
+Omarchy 支持的 agent 里，**Cursor CLI 和 Muse Code 不装**：前者的模型调用都在 Cursor 自己的服务器上，后者只接受 Meta 目录里的模型，都走不了 CLIProxyAPI（DECISIONS Q11）。
 
 #### 每次运行都会被覆盖的配置文件
 
@@ -196,6 +208,8 @@ stub 是 `omarchy-mise-install` 写的那种：先 `mise use -g`、再 `mise x`�
 
 - **Codex 的 hook 信任**是一次性的、每台机器各做一次：跑 `codex`、打开 `/hooks`，审核并信任 ponytail 的三个生命周期 hook，然后开一个新 thread。
 - **opencode 的 provider 认证**没有做：安装器带的是 `--skip-auth`。
+- **新装的 agent 要在 m2 上跑一次 `cliproxy-tier <host>`。** `copilot-gw`、`gemini-gw` 以及 grok、crush、openclaw 的网关配置都由它写入，而它只配置已经装好的 agent。
+- **OpenClaw 的 onboarding** 每台机器做一次，命令在 `~/.agents/docs/gateway-ops.md`（「Omarchy agents on a gateway-only host」一节），做完再跑一次 `cliproxy-tier <host>`。onboarding 会写入网关 provider、装上常驻的 `openclaw-gateway.service`，并且要求网关隧道已通，所以 role 不代劳。
 - **agent-reach 只配好了零配置的渠道。** 其余渠道要 cookie 或点一下浏览器扩展。要补齐就自己交互式跑一次 `agent-reach doctor`。
 - **`claude-mem` 的模型 id 要手工升级。** `roles/claude-mem/vars/main.yml` 里的 `claude_mem_model` 只认完整 id，id 一旦下架就是一个硬错误 `Fatal error: Unknown Claude model`，**会让 play 失败**。
 - **paseo 的配对**：`paseo daemon pair`。

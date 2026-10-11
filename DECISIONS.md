@@ -100,3 +100,13 @@
 **Justification:** Frank, in the session after the port was verified: "leave OpenCLI out, drop Sublime Text, IntelliJ Ultimate and kimi-code". A headless always-on host has no use for the two desktop apps. No AUR package remains in the play, so the Q3 mechanism is documented in docs/writing-roles.md rather than kept as dead code.
 **Outcome:** applied
 **Ref:** (this commit)
+
+## Q11 — interactive/omarchy-agents-gateway — tradeoff
+
+**Question:** mac-mini-2018-omarchy now routes every Omarchy agent it can through CLIProxyAPI (coding-agent Q374, Q375), and Copilot, Crush, Gemini, Grok and OpenClaw were installed there by hand. How should this repo carry them, and what about the two agents with no gateway route and OpenClaw's onboarding?
+**Options considered:** leave them as hand installs / one role per agent with Omarchy's own install path / one combined role; for OpenClaw: onboard in the role / report a missing onboarding only
+**Chosen:** Five roles, `copilot`, `crush`, `gemini`, `grok` and `openclaw`, placed after `pi` so the agents exist before `skills` fans out. The first four use the mise tool include with Omarchy's stub (`gemini` and `grok` depend on `nodejs`, being npm tools). `openclaw` runs `omarchy-install-openclaw-cli --check`/`--now`, as `hermes` does, and only prints a message when `~/.openclaw/openclaw.json` is missing. Cursor CLI and Muse Code get no role. No role writes gateway config.
+**Decided-by:** agent
+**Justification:** Frank asked to put the five agents in this repo so a rebuilt host gets them back; without a role, `cliproxy-tier` skips an absent agent without an error. One role per tool is the repo's shape (docs/writing-roles.md §Install layers). AGENTS.md makes the gateway files read-only here, and OpenClaw's onboarding writes its gateway provider, installs an always-on daemon and needs the tunnel up for a test request, so it stays the manual step that `~/.agents/docs/gateway-ops.md` describes. Cursor and Muse were left native by Frank (coding-agent Q375); installing them here would add two agents that skip the gateway.
+**Outcome:** applied
+**Ref:** (this commit); coding-agent Q374, Q375

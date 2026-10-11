@@ -1,0 +1,31 @@
+---
+# OpenClaw in the form Omarchy installs it: the `openclaw` pacman package, the one OpenClaw
+# install on the machine, which `omarchy-update` keeps current. `--check` is a `pacman -Q`
+# probe; `--now` installs the package and calls sudo itself.
+- name: Check whether OpenClaw is installed
+  ansible.builtin.command: omarchy-install-openclaw-cli --check
+  register: openclaw_check
+  changed_when: false
+  failed_when: false
+  check_mode: false
+
+- name: Install OpenClaw with Omarchy's installer
+  ansible.builtin.command: omarchy-install-openclaw-cli --now
+  when: openclaw_check.rc != 0
+  changed_when: true
+
+# Onboarding stays a manual step (DECISIONS Q11): it writes the gateway provider, which belongs
+# to cliproxy-tier, installs an always-on daemon, and sends a test request that needs the
+# gateway tunnel up. So the play only says it is missing.
+- name: Check whether OpenClaw is onboarded
+  ansible.builtin.stat:
+    path: "{{ lookup('env', 'HOME') }}/.openclaw/openclaw.json"
+  register: openclaw_config
+
+- name: Report that OpenClaw is not onboarded
+  ansible.builtin.debug:
+    msg: >-
+      OpenClaw is installed but not onboarded, so it has no model. Run the one-time onboarding
+      in ~/.agents/docs/gateway-ops.md ("Omarchy agents on a gateway-only host"), then
+      `cliproxy-tier <host>` on mac-mini-m2.
+  when: not openclaw_config.stat.exists
