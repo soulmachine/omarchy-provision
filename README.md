@@ -2,12 +2,13 @@
 
 使用 Ansible 自动化 [Omarchy](https://omarchy.org)（Arch Linux）开发环境配置。是 [soulmachine/macbook-provision](https://github.com/soulmachine/macbook-provision) 的 Omarchy 移植版：同一套工具，换成 Omarchy 的安装渠道。
 
-软件分四层安装，每个 role 只用其中一层（详见 `docs/writing-roles.md`）：
+软件分三层安装，每个 role 只用其中一层（详见 `docs/writing-roles.md`）：
 
 1. **Omarchy 已经用 mise 管理的工具**（各家 coding agent 的 CLI、gh、cf、node、uv）以及 npm 全局包：走 mise，`~/.local/bin` 下的 stub 和 Omarchy 自己写的一模一样。
 2. **Omarchy 自带安装器的东西**（`omarchy-install-*`）：调用那个安装器，它会顺带注册菜单项、主题和完成标记。
 3. **Arch 官方仓库的包**：[pacman 模块](https://docs.ansible.com/ansible/latest/collections/community/general/pacman_module.html)。
-4. **AUR 包**：`yay`，通过 `roles/pacman/tasks/aur.yml`。
+
+目前没有 AUR 包。需要时的做法见 `docs/writing-roles.md`（pacman 模块的 yay 模式看不到 AUR 包，DECISIONS Q3）。
 
 ## 语言运行时
 
@@ -97,7 +98,7 @@ pre-commit run --all-files
 
 | Role | 说明 |
 |------|------|
-| pacman | 先跑 `omarchy-update -y` 升级一切（仓库包、AUR、mise 工具、Omarchy 迁移），失败时记录下来、在 play 末尾才报错，不阻断后面的 role；需要重启时只提示，从不重启；然后装基础包 git、curl、wget、jq、ripgrep、fd、tree、htop、docker、ffmpeg、gnupg、tmux；VS Code 用 `omarchy-install-editor-vscode`，Sublime Text 用 AUR `sublime-text-4`（Claude、Gemini、ChatGPT 桌面版与 pearcleaner 没有 Linux 版） |
+| pacman | 先跑 `omarchy-update -y` 升级一切（仓库包、AUR、mise 工具、Omarchy 迁移），失败时记录下来、在 play 末尾才报错，不阻断后面的 role；需要重启时只提示，从不重启；然后装基础包 git、curl、wget、jq、ripgrep、fd、tree、htop、docker、ffmpeg、gnupg、tmux；VS Code 用 `omarchy-install-editor-vscode`（Claude、Gemini、ChatGPT 桌面版与 pearcleaner 没有 Linux 版；Sublime Text 已去掉） |
 | github | gh CLI（Omarchy 的 mise 工具）；若环境中有 `GITHUB_TOKEN`（由 `gh-token-fleet` 写入 `~/.bashrc`，不来自 `.env`），另外配置 SSH key 与 git 签名 |
 | direnv | 目录级环境变量管理（pacman `direnv`）；hook 写入 `~/.bashrc` |
 | dotenv | 不装任何软件；把 `.env` 以托管块写入 `~/.bashrc` 的交互守卫之上，让非交互式 shell（`ssh host 'bash -lc cmd'`、git hook、cron）也能读到其中的变量 |
@@ -114,7 +115,6 @@ pre-commit run --all-files
 | typesafe | TypeSafe Jev 模型相关的一切：官方 `typesafe-ai` skill（不需要 key），以及两个 Claude Code 插件 fast-jev-compaction 与 claude-jev；把 `CLAUDE_CODE_ENABLE_FUNCTION_HOOKS` 与 `TYPESAFE_API_KEY` 写入 `~/.claude/settings.json` 的 `env`；环境中无 `TYPESAFE_API_KEY` 时只跳过插件部分（依赖 claude-code、nodejs） |
 | codex | OpenAI Codex CLI（Omarchy 的 mise 工具 `codex`），并安装 [open-pstack](https://github.com/ericlitman/open-pstack) 的 `pstack` 插件（Claude Code 那一半在 claude-code role 的插件列表里；`/pstack:setup-pstack` 需手动运行）（依赖 nodejs） |
 | opencode | OpenCode CLI（Omarchy 的 mise 工具 `opencode`）；并用 `npx oh-my-openagent` 写入 `~/.config/opencode/opencode.json`，由版本戳门控，避免每次 play 重装（依赖 nodejs） |
-| kimi-code | Kimi Code CLI（AUR `kimi-code-bin`，命令是 `kimi`）；随 `omarchy-update` 的 `yay -Sua` 升级 |
 | omp | oh-my-pi（Omarchy 的 mise 工具，命令 `omp`） |
 | pi | pi coding agent（Omarchy 的 mise 工具 `pi`），并下发 `~/.pi/agent/settings.json` |
 | agent-sync | GitHub release 的二进制放到 `~/.local/bin/agent-sync`（AUR 只有过期的 0.1.0）；把 `~/.agents/` 扇出到各 agent；并托管每晚 02:17 的 `agent-sync sync` cron |
@@ -122,7 +122,6 @@ pre-commit run --all-files
 | agent-reach | 多渠道触达工具；上游只提供面向 AI agent 的安装文档，故由 `claude-gw -p` 按文档驱动安装。`~/.local/bin/claude-gw` 由 mac-mini-m2 上的 `cliproxy-tier` 写入，缺失时 role 报错而**不自行创建**（依赖 claude-code、python） |
 | playwright | 浏览器自动化：mise `npm:playwright`（依赖 nodejs） |
 | playwright-cli | Playwright CLI：mise `npm:@playwright/cli`，并安装其 skill（依赖 playwright） |
-| intellij-idea | IntelliJ IDEA Ultimate（AUR `intellij-idea-ultimate-edition`）（依赖 jdk） |
 | claude-mem | Claude 记忆插件；`npx -y claude-mem install` 为 claude-code / codex-cli / opencode 三者接线（依赖 nodejs、bun、uv） |
 | hermes | Hermes 个人 agent（Nous Research）的 CLI 版：`omarchy-install-hermes-cli`（mise pipx）；`~/.hermes/SOUL.md` 链接到 `~/.agents/AGENTS.md` |
 | ponytail | 给所有 agent 安装 [ponytail](https://github.com/DietrichGebert/ponytail) 插件：Claude Code / Codex / OpenCode / pi / oh-my-pi / Hermes 各用其原生安装方式 |
@@ -146,7 +145,7 @@ pre-commit run --all-files
 - **arch-mact2** 的 pre-refresh hook（只有 T2 硬件需要）。
 - **Sunshine**：Omarchy 的安装器有 bug，unit、web app 和 ufw 规则是手工做的一次性工作。
 
-macbook-provision 里没有移植的 role：`host-facts`、`shell`、`omarchy`（Omarchy 自身就是这三者）、`apple-container`、`cua`、`cmux`、`moshi`（没有 Linux 版）、`cc-switch`（去掉）。
+macbook-provision 里没有移植的 role：`host-facts`、`shell`、`omarchy`（Omarchy 自身就是这三者）、`apple-container`、`cua`、`cmux`、`moshi`（没有 Linux 版）、`cc-switch`、`intellij-idea`、`kimi-code` 以及 `homebrew` 里的 Sublime Text（去掉：无头服务器用不上，2026-10-11 首次运行装上后又卸掉了）。OpenCLI（agent-reach 的 X 后备）也不装，见 `roles/agent-reach/README.md`。
 
 ### Agent CLI 与技能
 
@@ -154,14 +153,13 @@ macbook-provision 里没有移植的 role：`host-facts`、`shell`、`omarchy`�
 
 #### 安装渠道
 
-和 Mac 上五花八门的渠道不同，这里几乎全是 mise，因为 Omarchy 自己就是这么装它们的：
+和 Mac 上五花八门的渠道不同，这里全是 mise，因为 Omarchy 自己就是这么装它们的：
 
 | 工具 | 安装渠道 | 落地位置 / 命令名 |
 |------|----------|-------------------|
 | claude-code | mise `claude` | stub `~/.local/bin/claude` |
 | codex | mise `codex` | stub `~/.local/bin/codex` |
 | opencode | mise `opencode` | stub `~/.local/bin/opencode` |
-| kimi-code | **AUR** `kimi-code-bin` | `/usr/bin/kimi`，命令是 **`kimi`** 而不是 `kimi-code` |
 | omp | mise（GitHub release） | stub `~/.local/bin/omp` |
 | pi | mise `pi` | stub `~/.local/bin/pi` |
 | hermes | `omarchy-install-hermes-cli`（mise pipx） | `~/.local/bin/hermes` |

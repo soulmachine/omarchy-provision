@@ -90,3 +90,13 @@
 **Justification:** Frank, 2026-10-11: run `omarchy-update` only in omarchy-provision. The play never reboots (Q2), so the Sunday check still owns reboots, and the Sunday 02:00 play precedes the 04:30 check, so the reboot sees that night's packages.
 **Outcome:** applied
 **Ref:** (pending)
+
+## Q9 — interactive/omarchy-port-headless — gate-resolution
+
+**Question:** After the first verified run, keep the three AUR desktop and CLI packages the port carried over from the Mac set (Sublime Text, IntelliJ IDEA Ultimate, kimi-code), and the OpenCLI step left out in Q8?
+**Options considered:** keep all three / drop all three / keep kimi-code as the one CLI
+**Chosen:** Drop all three and confirm Q8. The `kimi-code` and `intellij-idea` roles, the Sublime Text step and `roles/pacman/tasks/aur.yml`, which then had no caller, are removed. The three packages and the `kimi-yolo` alias were uninstalled from mac-mini-2018-omarchy by hand on 2026-10-11, since the first run had installed them an hour earlier and nothing had used them.
+**Decided-by:** human
+**Justification:** Frank, in the session after the port was verified: "leave OpenCLI out, drop Sublime Text, IntelliJ Ultimate and kimi-code". A headless always-on host has no use for the two desktop apps. No AUR package remains in the play, so the Q3 mechanism is documented in docs/writing-roles.md rather than kept as dead code.
+**Outcome:** applied
+**Ref:** (this commit)

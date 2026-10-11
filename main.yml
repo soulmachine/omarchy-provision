@@ -5,7 +5,8 @@
   become: false
 
   # The macbook-provision order minus the roles Omarchy makes moot (host-facts, shell,
-  # omarchy) and the ones with no Linux build (apple-container, cua, cmux, moshi, cc-switch).
+  # omarchy), the ones with no Linux build (apple-container, cua, cmux, moshi, cc-switch) and
+  # the ones a headless host has no use for (intellij-idea, kimi-code; DECISIONS Q9).
   # Every Omarchy host is an always-on server, so nothing here is gated on the machine.
   roles:
     - pacman
@@ -25,7 +26,6 @@
     - typesafe
     - codex
     - opencode
-    - kimi-code
     - omp
     - pi
     - agent-sync
@@ -33,7 +33,6 @@
     - agent-reach
     - playwright
     - playwright-cli
-    - intellij-idea
     - claude-mem
     - hermes
     - ponytail

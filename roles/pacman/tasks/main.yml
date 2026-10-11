@@ -85,9 +85,10 @@
       - tmux
     state: present
 
-# Of the Mac casks, the two with a Linux build. Omarchy's VS Code installer also turns off its
-# self-updater and applies the theme, and rewrites those files unconditionally, so it runs
-# once. Claude desktop, Gemini, pearcleaner and ChatGPT have no Linux build.
+# Of the Mac casks, the one with a Linux build that this host wants. Omarchy's VS Code
+# installer also turns off its self-updater and applies the theme, and rewrites those files
+# unconditionally, so it runs once. Claude desktop, Gemini, pearcleaner and ChatGPT have no
+# Linux build; Sublime Text was dropped with IntelliJ and kimi-code (DECISIONS Q9).
 - name: Check whether VS Code is installed
   ansible.builtin.command: pacman -Q visual-studio-code-bin
   register: pacman_vscode
@@ -99,10 +100,3 @@
   ansible.builtin.command: omarchy-install-editor-vscode
   when: pacman_vscode.rc != 0
   changed_when: true
-
-- name: Install Sublime Text from AUR
-  ansible.builtin.include_role:
-    name: pacman
-    tasks_from: aur
-  vars:
-    pacman_aur_pkg: sublime-text-4

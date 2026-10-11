@@ -1,6 +1,6 @@
 #!/bin/bash
 # Bootstrap an Omarchy host for the Ansible playbook: passwordless sudo and Ansible.
-# Everything else (pacman and AUR packages, mise tools, the always-on settings) is the
+# Everything else (pacman packages, mise tools, the always-on settings) is the
 # playbook's job. Idempotent. One sudo password prompt on a fresh host.
 set -euo pipefail
 

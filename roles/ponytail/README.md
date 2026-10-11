@@ -1,8 +1,7 @@
 # ponytail role
 
 `ponytail` installs one upstream plugin into six agents (Claude Code, Codex, pi, oh-my-pi, OpenCode,
-Hermes), each through that agent's own installer, one task file per agent under `tasks/`. kimi-code
-has no plugin mechanism and is skipped. Every Omarchy host is always-on, so the Hermes half runs
+Hermes), each through that agent's own installer, one task file per agent under `tasks/`.
 everywhere, with no gate (grilling Q2). The six task files are the Mac role's, unchanged: the agent
 paths (`~/.pi/agent`, `~/.omp/agent`, `~/.hermes`, `~/.local/bin/hermes`) are the same on Linux.
 
