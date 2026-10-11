@@ -135,7 +135,7 @@ pre-commit run --all-files
 | zellij | 终端复用器（pacman）；tag `terminal-multiplexer` |
 | tmux | 终端复用器（pacman）；tag `terminal-multiplexer`（`pacman` role 的基础包里也有，重复无害） |
 | herdr | Omarchy 自带的 pacman 包，本 role 只确认它在、装 herdr skill 并在 `~/.bashrc` 加终端标题函数；tag `terminal-multiplexer` |
-| always-on | 常驻服务器配置：屏蔽五个 sleep target、在 Omarchy 菜单隐藏 Suspend、SDDM 自动重登（`/etc/sddm.conf.d/zz-relogin.conf`）、`/etc/sysctl.d/zz-always-on.conf`、每周日 04:30 的 `omarchy-weekly-update` 脚本及其 cron、屏保延迟 86400 秒、sudoers 的 `verifypw=any` |
+| always-on | 常驻服务器配置：屏蔽五个 sleep target、在 Omarchy 菜单隐藏 Suspend、SDDM 自动重登（`/etc/sddm.conf.d/zz-relogin.conf`）、`/etc/sysctl.d/zz-always-on.conf`、每周日 04:30 的 `omarchy-weekly-update` 重启检查脚本及其 cron（更新本身由每晚的 `pacman` role 做）、屏保延迟 86400 秒、sudoers 的 `verifypw=any` |
 
 ### 不移植的内容
 
@@ -192,7 +192,7 @@ stub 是 `omarchy-mise-install` 写的那种：先 `mise use -g`、再 `mise x`�
 - **Hermes 拒绝安装 ponytail**，理由是插件扫描器给出 `dangerous` 判定（`--force` 也压不住）。role 把这一种失败明确放行并打印补救办法，其它任何错误仍然会让 play 失败。要接受这些发现，得自己在 `~/.hermes/config.yaml` 里设 `plugins.scan_on_install: false`，role 不替你做。
 - **claude-mem 每次都报 changed。** 它的安装器无论有没有实际动作都退出 0 并打印 "installed successfully"，所以 role 直接写死 `changed_when: true`。
 - 某个「只取几个技能」的源里的技能被上游改名或下架时，CLI 会退出 1 并打印 `● Available skills:` 加一整份清单，**读起来像帮助信息，其实是错误**。用 `npx skills@latest add <源> -l` 看上游现在有什么（`-l` 只列不装），然后改 `roles/skills/vars/main.yml`。这类失败**推迟到整个 play 的末尾**才抛出，但 PLAY RECAP 里依然是 `failed=1`。
-- **`omarchy-update` 需要重启时**，`pacman` role 只打印一条提示。play 从不重启；周日的 `omarchy-weekly-update` 会按同样的条件重启。
+- **`omarchy-update` 需要重启时**，`pacman` role 只打印一条提示。play 从不重启；周日的 `omarchy-weekly-update` 只做重启检查，按同样的条件重启（DECISIONS Q9）。
 
 #### role 代劳不了、需要人工的步骤
 

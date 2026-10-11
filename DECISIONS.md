@@ -80,3 +80,13 @@
 **Justification:** A provenance drop is the signal the check exists for, and an unattended run should not waive it. OpenCLI's use here, X search through a logged-in Chrome plus a one-time extension click, is not something a headless always-on host does. agent-reach itself installed and reports five channels up. Reversible with one include.
 **Outcome:** assumed
 **Ref:** (this commit)
+
+## Q9 — interactive/nightly-provision — deviation
+
+**Question:** The nightly `update-packages` sweep on mac-mini-m6 now runs this playbook, and so `omarchy-update -y`, every night (coding-agent Q384). Should the Sunday `omarchy-weekly-update` script still run `omarchy-update -y` itself?
+**Options considered:** keep both / script keeps only the reboot check / drop the script and reboot from the play
+**Chosen:** The script drops its update call and keeps only the reboot check. Its name, cron entry and log stay.
+**Decided-by:** human
+**Justification:** Frank, 2026-10-11: run `omarchy-update` only in omarchy-provision. The play never reboots (Q2), so the Sunday check still owns reboots, and the Sunday 02:00 play precedes the 04:30 check, so the reboot sees that night's packages.
+**Outcome:** applied
+**Ref:** (pending)

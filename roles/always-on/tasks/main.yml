@@ -50,10 +50,10 @@
     mode: "0644"
   notify: Apply the sysctls
 
-# Weekly unattended update that reboots when the kernel or Hyprland changed (coding-agent
-# Q364). The script decides the reboot because `omarchy-update-restart` asks through gum,
-# which cannot answer under cron.
-- name: Install the weekly update script
+# Weekly reboot check: reboots when the kernel or Hyprland changed (coding-agent Q364). The
+# update itself is the nightly playbook's `pacman` role (DECISIONS Q9). The script decides the
+# reboot because `omarchy-update-restart` asks through gum, which cannot answer under cron.
+- name: Install the weekly reboot check script
   ansible.builtin.copy:
     src: omarchy-weekly-update
     dest: "{{ lookup('env', 'HOME') }}/.local/bin/omarchy-weekly-update"
@@ -80,7 +80,7 @@
     - "'omarchy-weekly-update' in always_on_crontab.stdout"
   changed_when: true
 
-- name: Run the weekly update on Sunday at 04:30
+- name: Run the weekly reboot check on Sunday at 04:30
   ansible.builtin.cron:
     name: omarchy-weekly-update
     minute: "30"
