@@ -18,7 +18,7 @@ Pick the first layer that applies. Each has one shape, shown by an existing role
 | a tool Omarchy already manages with mise (agent CLIs, gh, cf, node, uv) or an npm global | `include_role: name: mise, tasks_from: tool` with `mise_tool`, and `mise_cmd` when a `~/.local/bin` stub is wanted; the stub is Omarchy's own `omarchy-mise-install` shape | `roles/claude-code` |
 | something Omarchy has an installer for (`omarchy-install-*`) | run the installer, gated on a `pacman -Q` probe so it runs once; no `become`, the script calls sudo itself | `roles/ghostty` |
 | an Arch repo package | `community.general.pacman` with `become: true` and `state: present` | `roles/pacman` |
-| an AUR package | `community.general.pacman` with `executable: yay` and NO `become`: yay refuses root | `roles/kimi-code` |
+| an AUR package | `include_role: name: pacman, tasks_from: aur` with `aur_pkg`; the pacman module's yay mode cannot see AUR packages | `roles/kimi-code` |
 | none of the above | the upstream installer behind a probe, as in ubuntu-provision | `roles/multica-cli` |
 
 `mise up` in the `mise` role and `omarchy-update -y` in the `pacman` role do every upgrade. A

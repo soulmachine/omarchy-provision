@@ -100,9 +100,9 @@
   when: pacman_vscode.rc != 0
   changed_when: true
 
-# yay, so no become: yay refuses root and calls sudo itself.
 - name: Install Sublime Text from AUR
-  community.general.pacman:
-    name: sublime-text-4
-    state: present
-    executable: yay
+  ansible.builtin.include_role:
+    name: pacman
+    tasks_from: aur
+  vars:
+    aur_pkg: sublime-text-4
