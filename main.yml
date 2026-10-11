@@ -49,6 +49,7 @@
     - obsidian
     - cloudflare
     - multica-cli
+    - purelymail
     - tailscale
     - role: zellij
       tags: [terminal-multiplexer]

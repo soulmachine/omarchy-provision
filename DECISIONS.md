@@ -110,3 +110,13 @@
 **Justification:** Frank asked to put the five agents in this repo so a rebuilt host gets them back; without a role, `cliproxy-tier` skips an absent agent without an error. One role per tool is the repo's shape (docs/writing-roles.md §Install layers). AGENTS.md makes the gateway files read-only here, and OpenClaw's onboarding writes its gateway provider, installs an always-on daemon and needs the tunnel up for a test request, so it stays the manual step that `~/.agents/docs/gateway-ops.md` describes. Cursor and Muse were left native by Frank (coding-agent Q375); installing them here would add two agents that skip the gateway.
 **Outcome:** applied
 **Ref:** (this commit); coding-agent Q374, Q375
+
+## Q11 — interactive/purelymail-cli — gate-resolution
+
+**Question:** How does the `purelymail` CLI (github.com/soulmachine/purelymail, Frank's Rust tool for the Purelymail API) reach every personal host, and where do its credentials live?
+**Options considered:** `cargo install purelymail` on each host / a role that installs the GitHub release tarball into `~/.local/bin` / by hand over ssh with nothing in the playbook
+**Chosen:** A `purelymail` role modelled on ubuntu-provision's `agent-sync` role: resolve the newest release from the releases/latest redirect, download the tarball for the host's architecture, unpack the one binary into `~/.local/bin`, converge on the reported version. No cargo needed. The two tokens, `PURELYMAIL_API_TOKEN` and `CARGO_REGISTRY_TOKEN`, are free-standing exports placed by hand in ~/.profile (mode 600, outside the dotenv managed block, like `GITHUB_TOKEN`), so the role never touches credentials and the dotenv role cannot clobber them. The host's `~/.bash_profile` gained `[ -f ~/.profile ] && . ~/.profile`, because Arch's default never reads `~/.profile`, so `bash -lc` runs would not have seen the tokens.
+**Decided-by:** human
+**Justification:** Frank chose the token files on 2026-10-11 (`~/.zshenv` on macOS, `~/.profile` on Linux). The tarball avoids a Rust toolchain on hosts that have none (supermicro, mac-mini-2018-omarchy) and a minute of compile on the rest.
+**Outcome:** applied
+**Ref:** purelymail DECISIONS Q30, release v0.1.0
