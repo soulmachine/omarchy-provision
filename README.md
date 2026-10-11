@@ -184,6 +184,8 @@ stub 是 `omarchy-mise-install` 写的那种：先 `mise use -g`、再 `mise x`�
 
 这个 role **故意不加 gate**，每次 play 都重新跑一遍安装器：这是唯一能把上游改动拉下来的机制。`changed` 由前后对 `~/.agents/skills/` 做校验和指纹比对得出。代价是每个源一次网络请求，是整个 playbook 里最慢的 role 之一。另外 `skills add` **从不删除**任何东西，上游下架的技能会作为孤儿目录留在存储里。
 
+扇出（`agent-sync sync`）由 `agent-sync status` 的退出码门控。排在 `skills` 之后的 role（playwright-cli、multica-cli、herdr）也会往存储里加技能，所以**全新机器上第二次运行会再扇出一次**，第三次起才是 `changed=0`（mac-mini-2018-omarchy 实测，2026-10-11）。
+
 #### 看起来像报错、其实是预期输出
 
 - **每个技能源都会报两个 per-agent 失败**（Eve 和 PromptScript 拒绝全局安装）。属于正常噪音。
