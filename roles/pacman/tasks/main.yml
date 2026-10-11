@@ -88,7 +88,7 @@
 # Of the Mac casks, the one with a Linux build that this host wants. Omarchy's VS Code
 # installer also turns off its self-updater and applies the theme, and rewrites those files
 # unconditionally, so it runs once. Claude desktop, Gemini, pearcleaner and ChatGPT have no
-# Linux build; Sublime Text was dropped with IntelliJ and kimi-code (DECISIONS Q9).
+# Linux build; Sublime Text was dropped with IntelliJ and kimi-code (DECISIONS Q10).
 - name: Check whether VS Code is installed
   ansible.builtin.command: pacman -Q visual-studio-code-bin
   register: pacman_vscode

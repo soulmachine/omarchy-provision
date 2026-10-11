@@ -91,7 +91,7 @@
 **Outcome:** applied
 **Ref:** (pending)
 
-## Q9 — interactive/omarchy-port-headless — gate-resolution
+## Q10 — interactive/omarchy-port-headless — gate-resolution
 
 **Question:** After the first verified run, keep the three AUR desktop and CLI packages the port carried over from the Mac set (Sublime Text, IntelliJ IDEA Ultimate, kimi-code), and the OpenCLI step left out in Q8?
 **Options considered:** keep all three / drop all three / keep kimi-code as the one CLI
