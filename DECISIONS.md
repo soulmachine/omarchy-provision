@@ -120,3 +120,13 @@
 **Justification:** Frank chose the token files on 2026-10-11 (`~/.zshenv` on macOS, `~/.profile` on Linux). The tarball avoids a Rust toolchain on hosts that have none (supermicro, mac-mini-2018-omarchy) and a minute of compile on the rest.
 **Outcome:** applied
 **Ref:** purelymail DECISIONS Q30, release v0.1.0
+
+## Q13 — interactive/herdr-rename-hook — tradeoff
+
+**Question:** The herdr-rename-hook skill's hook, which mirrors a Claude Code or Codex `/rename` onto the calling Herdr pane's agent, pane and tab, was installed on mac-mini-2018-omarchy by hand. Frank asked to put it in this repo so a rebuilt host gets it. Where, and how?
+**Options considered:** a new role / the `herdr` role; copy the hook and edit the settings files in Ansible / call the skill's own `install.sh`
+**Chosen:** In the `herdr` role, which already installs the herdr skill and runs after `skills`. It calls `~/.agents/skills/herdr-rename-hook/scripts/install.sh` only when `install.sh --check` fails, and reports `changed` when the `--check` output differs before and after. A missing skill prints a message and skips; a hook that stays incomplete (Codex with `[features] hooks` off) prints the `--check` lines. `HERDR_ENV` is cleared for the install, so the installer's in-pane self-check never runs during a play.
+**Decided-by:** agent
+**Justification:** The installer is the skill's source of truth for the wiring and merges only its own entries, so copying its logic here would drift. The `skills` role adopts `soulmachine/skills` into the store, so the installer is present by the time `herdr` runs. The `claude-code` role merges only its managed keys and never `hooks`, so the two roles do not rewrite each other. Tested here: two runs with the hook installed changed nothing; after `install.sh --uninstall`, run 1 reinstalled it (one change, self-check skipped) and run 2 changed nothing, ending with `--check` clean. Not tested: the missing-skill branch. The purelymail entry, appended in parallel as a second Q11, was renumbered to Q12 by its own session (3663bb7).
+**Outcome:** applied
+**Ref:** (this commit)

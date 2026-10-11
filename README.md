@@ -139,7 +139,7 @@ pre-commit run --all-files
 | tailscale | `omarchy-install-service-tailscale` + systemd `tailscaled`；若环境中有 `TAILSCALE_AUTH_KEY` 则自动 `tailscale up`，可选通过 OAuth client 关闭 key 过期 |
 | zellij | 终端复用器（pacman）；tag `terminal-multiplexer` |
 | tmux | 终端复用器（pacman）；tag `terminal-multiplexer`（`pacman` role 的基础包里也有，重复无害） |
-| herdr | Omarchy 自带的 pacman 包，本 role 只确认它在、装 herdr skill 并在 `~/.bashrc` 加终端标题函数；tag `terminal-multiplexer` |
+| herdr | Omarchy 自带的 pacman 包，本 role 只确认它在、装 herdr skill、在 `~/.bashrc` 加终端标题函数，并用 herdr-rename-hook skill 的 `install.sh` 接上 `/rename` 钩子（Claude Code 与 Codex 的 `/rename` 同步成 Herdr 的 agent、pane 和 tab 名）；tag `terminal-multiplexer` |
 | always-on | 常驻服务器配置：屏蔽五个 sleep target、在 Omarchy 菜单隐藏 Suspend、SDDM 自动重登（`/etc/sddm.conf.d/zz-relogin.conf`）、`/etc/sysctl.d/zz-always-on.conf`、每周日 04:30 的 `omarchy-weekly-update` 重启检查脚本及其 cron（更新本身由每晚的 `pacman` role 做）、屏保延迟 86400 秒、sudoers 的 `verifypw=any` |
 
 ### 不移植的内容
@@ -211,6 +211,7 @@ Omarchy 支持的 agent 里，**Cursor CLI 和 Muse Code 不装**：前者的模
 - **opencode 的 provider 认证**没有做：安装器带的是 `--skip-auth`。
 - **新装的 agent 要在 m2 上跑一次 `cliproxy-tier <host>`。** `copilot-gw`、`gemini-gw` 以及 grok、crush、openclaw 的网关配置都由它写入，而它只配置已经装好的 agent。
 - **OpenClaw 的 onboarding** 每台机器做一次，命令在 `~/.agents/docs/gateway-ops.md`（「Omarchy agents on a gateway-only host」一节），做完再跑一次 `cliproxy-tier <host>`。onboarding 会写入网关 provider、装上常驻的 `openclaw-gateway.service`，并且要求网关隧道已通，所以 role 不代劳。
+- **rename 钩子装上或更新后**，Codex 下次启动会问是否信任这个钩子，选「Trust all and continue」；已经在跑的 Claude Code 会话要打开一次 `/hooks` 或重启才会用上。
 - **agent-reach 只配好了零配置的渠道。** 其余渠道要 cookie 或点一下浏览器扩展。要补齐就自己交互式跑一次 `agent-reach doctor`。
 - **`claude-mem` 的模型 id 要手工升级。** `roles/claude-mem/vars/main.yml` 里的 `claude_mem_model` 只认完整 id，id 一旦下架就是一个硬错误 `Fatal error: Unknown Claude model`，**会让 play 失败**。
 - **paseo 的配对**：`paseo daemon pair`。
