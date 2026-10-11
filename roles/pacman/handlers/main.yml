@@ -1,0 +1,12 @@
+---
+# 5 minutes out, not now: the nightly sweep counts a host done when it reads PLAY RECAP in
+# /tmp/provision.log, which an immediate reboot would cut off, and Arch's tmpfs /tmp then
+# erases. The probe keeps a second run inside those 5 minutes from failing on the timer name.
+# Omarchy never clears its reboot-required flag, so a stale one would reboot every night.
+- name: Schedule a reboot
+  become: true
+  ansible.builtin.shell: >-
+    rm -f {{ lookup('env', 'HOME') }}/.local/state/omarchy/reboot-required &&
+    { systemctl is-active --quiet omarchy-provision-reboot.timer ||
+    systemd-run --on-active=5min --unit=omarchy-provision-reboot systemctl reboot; }
+  changed_when: true

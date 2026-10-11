@@ -5,9 +5,9 @@
 # update runs its migrations straight after the package upgrade and says the two must not be
 # separated; its pacman call also needs `--overwrite '/usr/share/omarchy/*'`. One call covers
 # the repos, AUR (`yay -Sua`), the mise tools, orphans and the keyring. On a host where nothing
-# is outdated it takes under a minute. It never reboots; the notice at the end says when one
-# is due. `omarchy-update` re-runs itself under `script`, so its full output is in
-# /tmp/omarchy-update.log.
+# is outdated it takes under a minute. It never reboots; the play does, after its last role,
+# when one is due (DECISIONS Q14). `omarchy-update` re-runs itself under `script`, so its
+# full output is in /tmp/omarchy-update.log.
 - name: Read the package and mise state before updating
   ansible.builtin.shell: pacman -Q && mise ls --json
   register: pacman_state_before
@@ -42,8 +42,8 @@
   changed_when: pacman_state_after.stdout != pacman_state_before.stdout
 
 # The three conditions omarchy-update-restart reboots on. It asks through gum, which no
-# unattended run can answer; the Sunday wrapper in the always-on role reboots on the same
-# three. The play only says so.
+# unattended run can answer, so the play decides: a due reboot notifies the handler, which
+# runs after the last role (DECISIONS Q14).
 - name: Check whether a reboot is due
   ansible.builtin.shell: |
     set -o pipefail
@@ -54,16 +54,16 @@
   args:
     executable: /bin/bash
   register: pacman_reboot_due
-  changed_when: false
+  changed_when: pacman_reboot_due.rc == 0
+  notify: Schedule a reboot
   failed_when: false
   check_mode: false
 
 - name: Report that a reboot is due
   ansible.builtin.debug:
     msg: >-
-      A reboot is due (new kernel, new Hyprland, or Omarchy's reboot-required flag). The play
-      never reboots. Run `sudo systemctl reboot` when convenient, or wait for the Sunday
-      omarchy-weekly-update, which reboots on the same conditions.
+      A reboot is due (new kernel, new Hyprland, or Omarchy's reboot-required flag). After its
+      last role the play schedules one for 5 minutes later.
   when: pacman_reboot_due.rc == 0
 
 # The Mac list minus gh, which is Omarchy's mise tool here.

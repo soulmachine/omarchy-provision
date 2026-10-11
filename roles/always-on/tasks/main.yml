@@ -50,43 +50,17 @@
     mode: "0644"
   notify: Apply the sysctls
 
-# Weekly reboot check: reboots when the kernel or Hyprland changed (coding-agent Q364). The
-# update itself is the nightly playbook's `pacman` role (DECISIONS Q9). The script decides the
-# reboot because `omarchy-update-restart` asks through gum, which cannot answer under cron.
-- name: Install the weekly reboot check script
-  ansible.builtin.copy:
-    src: omarchy-weekly-update
-    dest: "{{ lookup('env', 'HOME') }}/.local/bin/omarchy-weekly-update"
-    mode: "0755"
-
-# The first crontab entry was written by hand with its own comment line. The cron module
-# recognises only its `#Ansible: <name>` marker, so without this it would add a second
-# entry beside the hand-written one. Gated on the marker being absent, so it runs once.
-- name: Read the crontab
-  ansible.builtin.command: crontab -l
-  register: always_on_crontab
-  changed_when: false
-  failed_when: false
-  check_mode: false
-
-- name: Remove the hand-written weekly update crontab lines
-  ansible.builtin.shell: |
-    set -o pipefail
-    crontab -l | { grep -v -e '^# omarchy-weekly-update:' -e '/omarchy-weekly-update$' || true; } | crontab -
-  args:
-    executable: /bin/bash
-  when:
-    - "'#Ansible: omarchy-weekly-update' not in always_on_crontab.stdout"
-    - "'omarchy-weekly-update' in always_on_crontab.stdout"
-  changed_when: true
-
-- name: Run the weekly reboot check on Sunday at 04:30
+# The pacman role reboots when one is due (DECISIONS Q14), so the Sunday reboot check that
+# coding-agent Q364 added is retired. These two remove it from a host that still has it.
+- name: Remove the weekly reboot check from cron
   ansible.builtin.cron:
     name: omarchy-weekly-update
-    minute: "30"
-    hour: "4"
-    weekday: "0"
-    job: bash -l $HOME/.local/bin/omarchy-weekly-update
+    state: absent
+
+- name: Remove the weekly reboot check script
+  ansible.builtin.file:
+    path: "{{ lookup('env', 'HOME') }}/.local/bin/omarchy-weekly-update"
+    state: absent
 
 # The screensaver cannot be switched off in shell.json, so it is set one day out, past the
 # 300 s lock, and Omarchy skips it on a locked screen (coding-agent Q363). Merged into the
