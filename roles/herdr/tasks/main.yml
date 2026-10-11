@@ -1,0 +1,97 @@
+---
+# herdr is an Omarchy pacman package (omarchy-launch-terminal-herdr and omarchy-refresh-herdr
+# depend on it), so omarchy-update keeps it current and the Mac role's install.sh and
+# latest.json tasks are not needed. The skill and the title wrapper are the Mac role's.
+- name: Install herdr
+  become: true
+  community.general.pacman:
+    name: herdr
+    state: present
+
+# Multi-line, so blockinfile rather than the lineinfile used for one-line aliases elsewhere.
+# The named marker keeps this block from colliding with any other role's block in .bashrc.
+- name: Add the herdr terminal-title wrapper to .bashrc
+  ansible.builtin.blockinfile:
+    path: "{{ lookup('env', 'HOME') }}/.bashrc"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK: herdr"
+    state: present
+    block: |
+      # herdr: title the terminal "herdr <hostname>" instead of just "herdr".
+      # The bare "herdr" title comes from the terminal's shell-integration preexec; herdr itself never
+      # sets a title, so retitling here after preexec sticks for the whole session.
+      herdr() {
+        printf '\e]0;herdr %s\a' "${HOSTNAME%%.*}"
+        command herdr "$@"
+      }
+
+# Two tasks keep this both idempotent and fresh: `add` installs once (guarded by
+# `creates`, so it no-ops once the skill exists), and `update` re-checks upstream
+# every run, reporting `changed` only when the SKILL.md actually moves.
+- name: Install the herdr skill (teaches the agent to control Herdr from inside a Herdr pane)
+  ansible.builtin.command:
+    cmd: npx skills add herdrdev/herdr --skill herdr -g -y
+    creates: "{{ lookup('env', 'HOME') }}/.agents/skills/herdr"
+
+# `skills update` exits 0 no matter what happens and only prints "…up to date"
+# on one of its several no-change paths. It stays silent about being current
+# when a source is skipped, when there is nothing global to check, and, most
+# often here, when the check itself fails ("Failed to check skills from …"),
+# which is routine because the unauthenticated GitHub API allows just 60 calls
+# an hour and the git-clone fallback is its own failure surface. Matching on the
+# phrase therefore reports a phantom change whenever the quota runs dry, so
+# checksum the installed skill around the call and let the files decide.
+- name: Fingerprint the herdr skill before updating
+  ansible.builtin.find:
+    paths: "{{ lookup('env', 'HOME') }}/.agents/skills/herdr"
+    recurse: true
+    file_type: file
+    get_checksum: true
+  register: herdr_skill_before
+
+- name: Keep the herdr skill up to date from upstream
+  ansible.builtin.command:
+    cmd: npx skills update herdr -g -y
+  register: herdr_skill_update
+  changed_when: false
+
+# `skills add` records the skill's upstream path in ~/.agents/.skill-lock.json at
+# install time and never revisits it. When upstream moves the file (herdr went
+# from a root SKILL.md to skills/herdr/SKILL.md) the lock keeps pointing at the
+# old path, so `skills update` finds nothing there, calls the skill "deleted
+# upstream", declines to act on it in non-interactive mode, and the skill
+# silently freezes at its last-good version. This one sat unchanged from
+# 2026-07-02 to 2026-08-20 that way. Re-running `add` is what rewrites the path,
+# and the `creates:` guard above will never do it, so trigger it from the
+# warning. Matching a phrase is defensible here in a way it was not for
+# `changed_when`: this is a positive sentinel on exactly one branch, and a missed
+# match leaves a stale skill rather than inventing a change that never happened.
+- name: Re-add the herdr skill when upstream has moved its path
+  ansible.builtin.command:
+    cmd: npx skills add herdrdev/herdr --skill herdr -g -y
+  when: "'deleted upstream' in herdr_skill_update.stdout"
+  # Reaching this task means the drift was detected, and running it rewrites the
+  # lock entry, so the repair is a real change even when the skill's own files
+  # come back byte-identical. The checksum task below reports content separately.
+  changed_when: true
+
+- name: Check whether the herdr skill was updated
+  ansible.builtin.find:
+    paths: "{{ lookup('env', 'HOME') }}/.agents/skills/herdr"
+    recurse: true
+    file_type: file
+    get_checksum: true
+  register: herdr_skill_after
+  changed_when: >-
+    (herdr_skill_after.files | map(attribute='checksum') | sort)
+    != (herdr_skill_before.files | map(attribute='checksum') | sort)
+
+- name: Symlink ~/.claude/skills/herdr to ~/.agents/skills/herdr
+  ansible.builtin.file:
+    # Relative, not absolute: this is agentstow's canonical link form, and it
+    # owns the same path. An absolute target reads as "not in canonical form" in
+    # `agentstow status`, so the two rewrite each other forever: one CHANGED
+    # task per play, and a re-link on every `agentstow sync`.
+    src: "../../.agents/skills/herdr"
+    dest: "{{ lookup('env', 'HOME') }}/.claude/skills/herdr"
+    state: link
+    force: true

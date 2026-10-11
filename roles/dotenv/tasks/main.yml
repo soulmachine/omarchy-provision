@@ -1,0 +1,86 @@
+---
+# dotenv: export the repo's .env into ~/.bashrc, inside a managed block ABOVE the interactive
+# guard (`[[ $- != *i* ]] && return`).
+#
+# `.envrc` runs `dotenv_if_exists .env`, but direnv is hooked from the interactive part of
+# ~/.bashrc (direnv role), so it only ever fires in an INTERACTIVE shell. Every
+# non-interactive one sees none of it: `ssh host 'bash -lc cmd'`, git hooks, cron, and the
+# remote-run form in AGENTS.md. Roles gated on `lookup('env', VAR) | length > 0` would then
+# skip silently. Arch's bash reads ~/.bashrc for `bash -l` through ~/.bash_profile, and the
+# exports above the guard are what every such shell gets (coding-agent Q352, shell-startup.md).
+#
+# This role reads the .env FILE, never `lookup('env', ...)`. The lookup reads the ambient
+# environment, which is exactly what is missing in the case this role exists to fix: on a
+# fresh host it would resolve to nothing and write an empty block, and on a host whose .env
+# had been edited it would rewrite the block with the stale values already exported from it.
+
+- name: Check for the repo .env
+  ansible.builtin.stat:
+    path: "{{ dotenv_path }}"
+  register: dotenv_env_file
+
+# A missing .env is legitimate: the file is per-machine and gitignored, and a host may carry
+# no secrets. Say so rather than skipping in silence, because "no .env here" and "run from
+# the wrong directory" look identical from the recap, and only the second is a mistake.
+- name: Report that there is no .env to export
+  ansible.builtin.debug:
+    msg: >-
+      No {{ dotenv_path }}: nothing to export, and any existing managed block in ~/.bashrc is
+      left alone. If that is unexpected, check the run is from the repo root; this path comes
+      from playbook_dir.
+  when: not dotenv_env_file.stat.exists
+
+- name: Export the .env into ~/.bashrc
+  when: dotenv_env_file.stat.exists
+  block:
+    # The source of the secrets should be no more readable than the copy.
+    - name: Keep the .env private
+      ansible.builtin.file:
+        path: "{{ dotenv_path }}"
+        mode: "0600"
+
+    # The guard that matters. blockinfile happily writes an empty block, so a parse that
+    # matched nothing would silently strip every export from every non-interactive shell on
+    # the host. A .env that exists but yields no assignment is a parse bug or a corrupt file,
+    # not a configuration; fail rather than write.
+    - name: Fail when the .env parses to no variables
+      ansible.builtin.assert:
+        that: dotenv_names | length > 0
+        fail_msg: >-
+          {{ dotenv_path }} exists but no line in it parses as an assignment. Refusing to
+          write an empty managed block, which would unset every variable ~/.bashrc currently
+          exports.
+        success_msg: "{{ dotenv_names | length }} variable(s) to export: {{ dotenv_names | join(', ') }}"
+
+    # Above the guard, so non-interactive login shells get the exports. The hand-written
+    # blocks already there (jev-fleet's, the m6 credentials) are not touched.
+    #
+    # no_log because the block is the credentials themselves; otherwise -v or --diff prints
+    # all of them. That hides a failure message too, which is affordable only because
+    # `validate` runs `bash -n` on the candidate BEFORE anything is written: a bad parse
+    # leaves the live file untouched, and `bash -n ~/.bashrc` reproduces the error.
+    - name: Write the managed .env block into ~/.bashrc
+      ansible.builtin.blockinfile:
+        path: "{{ lookup('env', 'HOME') }}/.bashrc"
+        marker: "# --- {mark} ---"
+        marker_begin: "omarchy-provision .env (managed)"
+        marker_end: "end omarchy-provision .env"
+        insertbefore: '^\[\[ \$- != \*i\* \]\] && return$'
+        create: true
+        mode: "0600"
+        validate: bash -n %s
+        block: |
+          # Generated from the repo .env. Edit that file, then re-run. Do not hand-edit.
+          {% for name in dotenv_names %}
+          export {{ name }}='{{ dotenv_values[loop.index0] }}'
+          {% endfor %}
+      no_log: true
+      register: dotenv_block
+
+    # no_log above suppresses this task's own report, so say what happened here instead;
+    # names only, never values.
+    - name: Report the exported variables
+      ansible.builtin.debug:
+        msg: >-
+          ~/.bashrc managed block {{ 'updated' if dotenv_block is changed else 'already current' }}
+          ({{ dotenv_names | length }}): {{ dotenv_names | join(', ') }}

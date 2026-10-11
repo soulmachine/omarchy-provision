@@ -1,0 +1,22 @@
+---
+# `<pkg>@latest`, not a bare `uv tool install <pkg>`: the bare form no-ops with "`<pkg>` is
+# already installed" once any version is present, so a converged machine would never pick up
+# new releases. `@latest` re-resolves every run and also overrides an exact-version pin left
+# by an earlier manual install. Bare `uv`: mise's shims are on PATH under `bash -lc`.
+#
+# changed_when: uv prints an audit line per package it actually wrote ("Installed 3 packages"
+# / "Uninstalled 1 package"); when everything is already current it prints "Checked 3
+# packages" and only the unconditional "Installed 1 executable: <name>" line, which the
+# "package" in the pattern deliberately excludes.
+#
+# The Mac role's Apple Silicon whisper tools are not here: no Linux need, no arch gate.
+- name: Install Python CLI tools with uv
+  ansible.builtin.command: >-
+    uv tool install
+    {{ ('--with ' ~ python_cli_tool_extras[item]) if item in python_cli_tool_extras else '' }}
+    {{ item }}@latest
+  loop: "{{ python_cli_tools }}"
+  register: python_uv_tool_install
+  changed_when: >-
+    (python_uv_tool_install.stderr + python_uv_tool_install.stdout)
+    is search('Installed [0-9]+ package')

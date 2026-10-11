@@ -1,0 +1,9 @@
+---
+# `mise use -g go@latest`, the command omarchy-install-dev-env runs for go. `@latest` is a
+# pointer mise re-resolves, and the mise role's `mise up` moves it.
+- name: Ensure Go is installed through mise
+  ansible.builtin.include_role:
+    name: mise
+    tasks_from: tool
+  vars:
+    mise_tool: go

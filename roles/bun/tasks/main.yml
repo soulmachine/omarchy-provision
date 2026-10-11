@@ -1,0 +1,9 @@
+---
+# `mise use -g bun@latest`, the command omarchy-install-dev-env runs for bun. Replaces the
+# Mac's bun.com installer and `bun upgrade`; the mise role's `mise up` moves it.
+- name: Ensure bun is installed through mise
+  ansible.builtin.include_role:
+    name: mise
+    tasks_from: tool
+  vars:
+    mise_tool: bun

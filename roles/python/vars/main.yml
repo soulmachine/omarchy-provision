@@ -1,0 +1,17 @@
+---
+# `uv tool install` refuses a package that ships no console scripts ("No executables are
+# provided by package `x`; removing tool", exit 2), so only real CLIs belong here. Pure
+# libraries are not provisioned globally; reach for them with `uv run --with <pkg> python`.
+python_cli_tools:
+  - yamllint
+  - ansible-lint
+  - ruff
+  - pre-commit
+  - httpie
+
+# Extra packages to install *into* a tool's own uv environment, as `<tool>: <package>`.
+# ansible-lint resolves `community.general.*` against the collections in its own environment,
+# which a bare install does not have, so it failed every role with
+# `syntax-check[unknown-module]`. `--with ansible` puts the collection bundle there.
+python_cli_tool_extras:
+  ansible-lint: ansible

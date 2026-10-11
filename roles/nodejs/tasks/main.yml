@@ -1,0 +1,10 @@
+---
+# `mise use -g node@latest`, the command omarchy-install-dev-env runs for node, and the pin
+# Frank chose for this box (coding-agent Q367), not the Mac's `lts`. The mise role's
+# `mise up` moves it.
+- name: Ensure Node.js is installed through mise
+  ansible.builtin.include_role:
+    name: mise
+    tasks_from: tool
+  vars:
+    mise_tool: node

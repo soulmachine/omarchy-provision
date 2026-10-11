@@ -1,0 +1,7 @@
+---
+# Omarchy installs tmux itself; the pacman role lists it too. This only asserts it.
+- name: Install tmux
+  become: true
+  community.general.pacman:
+    name: tmux
+    state: present

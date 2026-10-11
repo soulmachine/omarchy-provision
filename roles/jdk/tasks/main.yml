@@ -1,0 +1,9 @@
+---
+# `mise use -g java@latest`, the command omarchy-install-dev-env runs for java. The Mac role
+# asks for `lts`; here every mise tool tracks latest and `mise up` moves it.
+- name: Ensure the JDK is installed through mise
+  ansible.builtin.include_role:
+    name: mise
+    tasks_from: tool
+  vars:
+    mise_tool: java
