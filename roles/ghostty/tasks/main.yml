@@ -1,0 +1,16 @@
+---
+# Omarchy's installer, not a bare pacman install: it also makes ghostty the default terminal
+# (Super+Return, xdg-terminals.list) and seeds Omarchy's ghostty config with its theme hook
+# when ~/.config/ghostty is missing (grilling Q23). The Mac role's config is not deployed:
+# Omarchy owns ~/.config/ghostty/config on this platform. The script calls sudo itself.
+- name: Check whether ghostty is installed
+  ansible.builtin.command: pacman -Q ghostty
+  register: ghostty_pkg
+  changed_when: false
+  failed_when: false
+  check_mode: false
+
+- name: Install ghostty and make it the default terminal
+  ansible.builtin.command: omarchy-install-terminal ghostty
+  when: ghostty_pkg.rc != 0
+  changed_when: true

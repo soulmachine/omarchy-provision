@@ -30,3 +30,33 @@
 **Justification:** Measured on mac-mini-2018-omarchy on 2026-10-11 with `--check`. The task file is twelve lines and no new collection; the three AUR roles (kimi-code, intellij-idea, pacman's Sublime Text) include it.
 **Outcome:** applied
 **Ref:** 74170fc
+
+## Q4 — interactive/omarchy-port-tailscale — deviation
+
+**Question:** Q1 chose `omarchy-install-service-tailscale` as the tailscale role's installer. Its `sudo tailscale up --accept-routes` has no auth key, so on a host that is not enrolled it prints a login URL and waits for a browser, which an unattended play cannot answer. How does a fresh host get Tailscale?
+**Options considered:** call the installer and accept the hang / install the package and tailscaled with pacman and systemd, enrol with `TAILSCALE_AUTH_KEY`, then run the installer once for its extras (operator, Taildrop, bar plugin, web app) gated on the node being Running / replicate the four extras as tasks and never call the installer
+**Chosen:** The second. Without an auth key the package is installed, the enrolment is reported as a hand step and the extras follow on the next play. On a host that has the package, which is every host today, the installer is never called.
+**Decided-by:** agent
+**Justification:** `/usr/bin/omarchy-install-service-tailscale` read on mac-mini-2018-omarchy, 2026-10-11. The installer's `tailscale up` on an enrolled node exits 1 for not restating `--operator`, and the script does not stop on it, so the once-after-enrolment call is safe. A hard failure on a missing key was rejected: it would stop the four roles after tailscale for an optional credential, against main.yml's deferred-failure rule.
+**Outcome:** assumed
+**Ref:** (this commit)
+
+## Q5 — interactive/omarchy-port-paseo-restart — refinement
+
+**Question:** The Mac paseo role restarts the daemon when the role itself upgraded the CLI. Here the upgrade happens in the mise role's single `mise up`, several roles earlier. What restarts the daemon after an upgrade?
+**Options considered:** a fact set by the mise role and read here / compare the daemon's reported `daemonVersion` with mise's active version of `npm:@getpaseo/cli` and restart on a difference / restart on every run
+**Chosen:** The version comparison, plus a restart when the unit file or the relay setting changed.
+**Decided-by:** agent
+**Justification:** No cross-role variable, fires once per upgrade and never on a converged run. `paseo daemon status --json` reports `daemonVersion`, verified 2026-10-11.
+**Outcome:** assumed
+**Ref:** (this commit)
+
+## Q6 — interactive/omarchy-port-ghostty-config — deviation
+
+**Question:** The Mac ghostty role deploys `files/config`. Port it?
+**Options considered:** deploy the Mac config / leave `~/.config/ghostty/config` to Omarchy
+**Chosen:** Leave it. Omarchy seeds the file with its theme include when it makes ghostty the default terminal, and the Mac config would overwrite that.
+**Decided-by:** agent
+**Justification:** `~/.config/ghostty/config` on mac-mini-2018-omarchy is Omarchy's, read 2026-10-11. Reversible by adding one copy task.
+**Outcome:** applied
+**Ref:** (this commit)

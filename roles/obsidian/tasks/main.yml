@@ -1,0 +1,21 @@
+---
+# Omarchy's own package set includes Obsidian; this asserts it.
+- name: Install Obsidian
+  become: true
+  community.general.pacman:
+    name: obsidian
+    state: present
+
+# Defuddle as a mise npm tool with a stub, the Mac's `npm install -g` (grilling Q19). The
+# mise role's `mise up` upgrades it.
+- name: Ensure the Defuddle CLI is installed through mise
+  ansible.builtin.include_role:
+    name: mise
+    tasks_from: tool
+  vars:
+    mise_tool: "npm:defuddle"
+    mise_cmd: defuddle
+
+# The Obsidian skills are installed by the `skills` role, which lists
+# kepano/obsidian-skills in skills_sources and re-fetches it every play. They lived
+# here behind a `creates:` sentinel, which froze all 5 at 2026-07-02.

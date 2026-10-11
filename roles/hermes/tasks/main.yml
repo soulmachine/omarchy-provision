@@ -1,0 +1,26 @@
+---
+# Hermes, Nous Research's personal AI agent, in the CLI form Omarchy installs: a mise pipx
+# tool behind the ~/.local/bin/hermes stub that `omarchy-install-hermes-cli` writes, pinned
+# to the Python Hermes supports (grilling Q22). The mise role's `mise up` upgrades it. Not
+# `omarchy-install-ai-hermes`, which installs the desktop app and removes this CLI.
+#
+# `--check` exits 0 only when the stub is Omarchy's, its mise environment is built and
+# `hermes chat` has the flags Omarchy's launcher passes; a stub written but never run (a
+# "cold" stub that installs on its first call) exits 1. `--now` writes the stub and runs the
+# install right away, so the play leaves a working `hermes` for the ponytail role. A hermes
+# at that path that Omarchy did not write is left alone by the installer, which then exits
+# 1 with its own message, and that fails this task.
+- name: Check whether Hermes is installed and ready
+  ansible.builtin.command: omarchy-install-hermes-cli --check
+  register: hermes_check
+  changed_when: false
+  failed_when: false
+  check_mode: false
+
+- name: Install Hermes with Omarchy's installer
+  ansible.builtin.command: omarchy-install-hermes-cli --now
+  when: hermes_check.rc != 0
+  changed_when: true
+
+- name: Point hermes at the shared agent instructions
+  ansible.builtin.include_tasks: instructions.yml

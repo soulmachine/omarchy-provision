@@ -1,0 +1,14 @@
+---
+# cf — Cloudflare's CLI. https://blog.cloudflare.com/cf-cli-local-explorer/
+# Omarchy's own mise tool; this adds the stub where Omarchy left only the mise entry.
+- name: Ensure the cf CLI is installed through mise
+  ansible.builtin.include_role:
+    name: mise
+    tasks_from: tool
+  vars:
+    mise_tool: "npm:cf"
+    mise_cmd: cf
+
+# The Cloudflare skills are installed by the `skills` role, which lists
+# cloudflare/skills in skills_sources and re-fetches it every play. They lived here
+# behind a `creates:` sentinel, which froze all 8 at 2026-07-02.

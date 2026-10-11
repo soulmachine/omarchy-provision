@@ -1,0 +1,9 @@
+---
+# The AUR build of the Mac cask's edition (grilling Q20); `yay -Sua` inside omarchy-update
+# keeps it current.
+- name: Install IntelliJ IDEA from AUR
+  ansible.builtin.include_role:
+    name: pacman
+    tasks_from: aur
+  vars:
+    pacman_aur_pkg: intellij-idea-ultimate-edition

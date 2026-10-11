@@ -1,0 +1,145 @@
+---
+# Upstream's documented server install, `@getpaseo/cli` from npm, as a mise tool (grilling
+# Q21, Q28): the CLI and the daemon, which serves the web UI itself. Every Omarchy host is
+# always-on, so there is no desktop-app branch. The mise role's `mise up` upgrades it.
+- name: Ensure the Paseo CLI is installed through mise
+  ansible.builtin.include_role:
+    name: mise
+    tasks_from: tool
+  vars:
+    mise_tool: "npm:@getpaseo/cli"
+    mise_cmd: paseo
+
+# The role owns the daemon's systemd user unit, the Mac role's LaunchAgent (DECISIONS Q176).
+- name: Install the Paseo daemon unit
+  ansible.builtin.copy:
+    src: paseo-daemon.service
+    dest: "{{ lookup('env', 'HOME') }}/.config/systemd/user/paseo-daemon.service"
+    mode: "0644"
+  register: paseo_unit
+
+# The relay (relay.paseo.sh, end-to-end encrypted) is the only way a paired phone or
+# laptop reaches this daemon, which listens on 127.0.0.1 alone. Paseo defaults it to
+# off. `config set` only saves `~/.paseo/config.json`; its own output says it is
+# "not applied to a running daemon", so the restart below picks it up. On a new
+# host it writes the file before the daemon's first start. Pairing stays manual:
+# the `paseo daemon pair` link is a per-host secret.
+# `default('{}', true)`: under `--check` the skipped read leaves an empty stdout.
+- name: Read whether the Paseo relay is enabled
+  ansible.builtin.command: paseo daemon config get daemon.relay.enabled
+  register: paseo_relay
+  changed_when: false
+
+- name: Enable the Paseo relay
+  ansible.builtin.command: paseo daemon config set daemon.relay.enabled true
+  register: paseo_relay_set
+  changed_when: true
+  when: (paseo_relay.stdout | default('{}', true) | from_json).value | default(false) is not sameas true
+
+# A daemon keeps running the code it started on, so after an upgrade (the mise role's
+# `mise up`, or the first install above) it runs a version that is no longer the one
+# installed, and mise prunes the old tree after a grace period. The restart below is
+# gated on the daemon's own version differing from mise's active one, so it fires once
+# per upgrade and never on a converged run. Both reads are harmless under `--check`;
+# `paseo` may not exist yet on a fresh host, hence `failed_when: false`.
+- name: Read the installed Paseo version
+  ansible.builtin.command: mise ls --json
+  register: paseo_mise_ls
+  changed_when: false
+  check_mode: false
+
+- name: Read the running Paseo daemon version
+  ansible.builtin.command: paseo daemon status --json
+  register: paseo_daemon_before
+  changed_when: false
+  failed_when: false
+  check_mode: false
+
+- name: Decide whether the Paseo daemon must restart
+  ansible.builtin.set_fact:
+    paseo_restart: >-
+      {{ paseo_unit is changed or paseo_relay_set is changed
+         or (paseo_daemon_before.stdout | default('{}', true) | from_json).daemonVersion | default('')
+            != ((paseo_mise_ls.stdout | from_json)['npm:@getpaseo/cli'] | default([])
+                | selectattr('active') | map(attribute='version') | join(',')) }}
+
+# A restart kills the daemon's running agents, so it is reserved for the three changes
+# above. `started` on a running unit is a no-op. An unloaded or stopped unit, including
+# one someone stopped on purpose, is started again on the next run.
+- name: Run the Paseo daemon
+  ansible.builtin.systemd_service:
+    name: paseo-daemon
+    scope: user
+    daemon_reload: true
+    enabled: true
+    state: "{{ 'restarted' if paseo_restart | bool else 'started' }}"
+
+# An active unit is not a running daemon: with `Restart=always` a daemon that fails on
+# every start still shows as active while it loops. Ask the daemon itself, allowing up
+# to 60s for a start or restart above to come up. On this ansible-core, `failed_when:
+# false` holds even when the retries run out (verified 2026-10-04), so a down daemon is
+# recorded, not raised. main.yml's post_tasks fail the play on it, so the roles after
+# this one still run (see the comment there). `check_mode: false`: under `--check` a
+# skipped read never meets `until`, and running out of retries there is fatal despite
+# `failed_when` (measured 2026-10-07).
+- name: Read whether the Paseo daemon is running
+  ansible.builtin.command: paseo daemon status --json
+  register: paseo_daemon_status
+  changed_when: false
+  failed_when: false
+  check_mode: false
+  retries: 12
+  delay: 5
+  until: (paseo_daemon_status.stdout | default('{}', true) | from_json).localDaemon | default('') == 'running'
+
+# A host fact, not a role var, so main.yml's post_tasks can read it.
+- name: Record a Paseo daemon that is not running
+  ansible.builtin.set_fact:
+    paseo_daemon_down: >-
+      The Paseo daemon is not running (localDaemon:
+      {{ (paseo_daemon_status.stdout | default('{}', true) | from_json).localDaemon | default('no status') }})
+      after 60s of waiting. `systemctl --user status paseo-daemon` shows the unit's state and
+      `journalctl --user -u paseo-daemon` the daemon's own error. archs-mac-mini's week-long
+      outage in 2026-09 was a stale, empty ~/.paseo/paseo.pid.
+  when:
+    - paseo_daemon_status is not skipped
+    - (paseo_daemon_status.stdout | default('{}', true) | from_json).localDaemon | default('') != 'running'
+
+# post_tasks only run in a full play, so a single-role run would never see the failure
+# there. The skills role reports its deferred failures the same way.
+- name: Report a Paseo daemon that is not running
+  ansible.builtin.debug:
+    msg: "{{ paseo_daemon_down }}"
+  when: paseo_daemon_down is defined
+
+# The paseo-bots plugin (DECISIONS Q192). Plugins are trusted, unsandboxed code, and
+# Paseo ships with its global `pluginsEnabled` switch off, which leaves an installed
+# plugin `disabled`; the role turns it on, by the user's choice. Both steps talk to the
+# daemon, so they wait for it to be running. `paseo reload` applies config.json
+# without the unit restart above, which would kill the daemon's running agents.
+# Install only, no update: like the CLI above it would track upstream, but
+# `paseo plugin update` re-trusts new unsandboxed code, so that stays a manual
+# `paseo plugin update paseo-bots`.
+# `default(..., true)`: under `--check` the skipped reads leave an empty stdout.
+- name: Enable Paseo plugins and install paseo-bots
+  when: paseo_daemon_down is not defined
+  block:
+    - name: Read whether Paseo plugins are enabled
+      ansible.builtin.command: paseo daemon config get pluginsEnabled
+      register: paseo_plugins_switch
+      changed_when: false
+
+    - name: Enable Paseo plugins
+      ansible.builtin.shell: paseo daemon config set pluginsEnabled true && paseo reload --json
+      changed_when: true
+      when: (paseo_plugins_switch.stdout | default('{}', true) | from_json).value | default(false) is not sameas true
+
+    - name: Read the installed Paseo plugins
+      ansible.builtin.command: paseo plugin ls --json
+      register: paseo_plugins
+      changed_when: false
+
+    - name: Install the paseo-bots plugin
+      ansible.builtin.command: paseo plugin install npm:@oliexe/paseo-bots
+      changed_when: true
+      when: "'paseo-bots' not in (paseo_plugins.stdout | default('[]', true) | from_json | map(attribute='id'))"

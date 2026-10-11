@@ -1,0 +1,296 @@
+---
+# Tailscale is Omarchy's own service: `omarchy-install-service-tailscale` installs the
+# package, enables tailscaled, runs `tailscale up`, makes $USER the operator, enables Taildrop
+# receiving, adds the bar plugin and the admin-console web app (grilling Q4). Its
+# `tailscale up` has no auth key, so on a host that is not enrolled yet it prints a login
+# URL and waits for a browser, which no unattended run can answer. So on a host without
+# the package this role installs and enrols the node itself first, with TAILSCALE_AUTH_KEY,
+# and runs Omarchy's installer only once the node is Running, when its `tailscale up`
+# exits at once (it restates fewer flags than the enrolment below and is refused).
+# Without an auth key the package is installed and the enrolment is left to a hand-run
+# `tailscale up`, as on the Macs; the extras then follow on the next play.
+- name: Check whether Tailscale is installed
+  ansible.builtin.command: pacman -Q tailscale
+  register: tailscale_pkg
+  changed_when: false
+  failed_when: false
+  check_mode: false
+
+# ─── Credentials ──────────────────────────────────────────────────────────────
+# Two independent credentials that are NOT interchangeable, and each gates a
+# different half of what follows:
+#
+#   TAILSCALE_AUTH_KEY  enrols this *node* onto the tailnet (`tailscale up`).
+#   OAuth client        authenticates *control-plane API calls* (key expiry).
+#
+# Both are loaded up front, before either is used.
+- name: Load Tailscale auth key from environment
+  ansible.builtin.set_fact:
+    tailscale_auth_key: "{{ lookup('env', 'TAILSCALE_AUTH_KEY') }}"
+  no_log: true
+
+# The key-expiry credential is an OAuth client ("trust credential") created at
+# https://login.tailscale.com/admin/settings/trust-credentials and scoped to
+# `devices:core`, whose documented endpoint list covers exactly the two calls
+# further down. Its secret does not expire, it belongs to the tailnet rather
+# than to a person, its use lands in the configuration audit log, and it can be
+# revoked on its own.
+#
+# Personal API access tokens (TAILSCALE_API_ACCESS_TOKEN) are NOT accepted.
+# They carry no scopes at all — fully permitted — and expire 90 days after
+# minting, which turned the key-expiry task into a 401 on a timer nobody was
+# watching.
+#
+# An OAuth client secret cannot be used as a bearer token directly, hence the
+# exchange further down. (It *can* be passed straight to
+# `tailscale up --auth-key=`, but that needs the `auth_keys` scope and forces
+# tag ownership onto the node, so TAILSCALE_AUTH_KEY stays a separate
+# credential.)
+- name: Load Tailscale OAuth client credentials from environment
+  ansible.builtin.set_fact:
+    tailscale_oauth_client_id: "{{ lookup('env', 'TAILSCALE_OAUTH_CLIENT_ID') }}"
+    tailscale_oauth_client_secret: "{{ lookup('env', 'TAILSCALE_OAUTH_CLIENT_SECRET') }}"
+  no_log: true
+
+# Split from the task above because a set_fact cannot reference a key defined in
+# the same task — Ansible fails with "Error while resolving value for 'x': 'y'
+# is undefined".
+- name: Decide whether an OAuth client is configured
+  ansible.builtin.set_fact:
+    tailscale_oauth_configured: >-
+      {{ (tailscale_oauth_client_id | length > 0)
+         and (tailscale_oauth_client_secret | length > 0) }}
+
+# Half a pair cannot authenticate, and silently skipping would let node keys
+# quietly go back to expiring — the failure the key-expiry block exists to
+# prevent.
+- name: Require both halves of the OAuth client pair
+  ansible.builtin.fail:
+    msg: >-
+      Only one of TAILSCALE_OAUTH_CLIENT_ID / TAILSCALE_OAUTH_CLIENT_SECRET is
+      set in .env. Set both, or neither to skip the key-expiry step entirely.
+  when:
+    - not (tailscale_oauth_configured | bool)
+    - (tailscale_oauth_client_id | length > 0) or (tailscale_oauth_client_secret | length > 0)
+
+# ─── Install ──────────────────────────────────────────────────────────────────
+- name: Install the Tailscale package
+  become: true
+  community.general.pacman:
+    name: tailscale
+    state: present
+
+- name: Run tailscaled
+  become: true
+  ansible.builtin.systemd_service:
+    name: tailscaled
+    enabled: true
+    state: started
+
+# ─── Node enrolment ───────────────────────────────────────────────────────────
+- name: Auto-connect to tailnet when auth key is provided
+  when: tailscale_auth_key | length > 0
+  block:
+    - name: Check current Tailscale state
+      ansible.builtin.command: tailscale status --json
+      register: _tailscale_status
+      changed_when: false
+      failed_when: false
+      check_mode: false # read-only probe; run in --check so the from_json guard has real JSON
+
+    - name: Remind user that admin approval may be required
+      ansible.builtin.debug:
+        msg: |
+
+          ================================================================
+          About to run `tailscale up`. If your tailnet has Device Approval
+          enabled, this task will HANG until the device is approved.
+
+          Recommended: disable Device Approval entirely so this (and
+          future provisioning runs) never hang:
+
+            https://login.tailscale.com/admin/settings/device-management
+
+          Otherwise, approve this host manually at:
+
+            https://login.tailscale.com/admin/machines
+          ================================================================
+      when: _tailscale_status.rc != 0 or (_tailscale_status.stdout | from_json).BackendState != 'Running'
+
+    # `tailscale up` rejects a call that drops a previously set non-default flag, so every
+    # non-default flag the daemon was last brought up with is restated here. `--operator`
+    # is what Omarchy's installer sets too, so `tailscale` needs no sudo afterwards.
+    - name: Bring Tailscale up
+      ansible.builtin.command: >
+        tailscale up
+        --accept-dns
+        --accept-routes
+        --operator={{ lookup('env', 'USER') }}
+        --auth-key={{ tailscale_auth_key }}
+      become: true
+      no_log: true
+      changed_when: true
+      when: _tailscale_status.rc != 0 or (_tailscale_status.stdout | from_json).BackendState != 'Running'
+
+# Omarchy's extras, once, on the host this run installed the package on. Gated on the node
+# being Running so the installer's own `tailscale up` cannot wait for a browser; there it
+# exits 1 for not restating `--operator`, which the script does not stop on. Its exit code
+# is that of its last command, the web-app install, so a failure there is reported, not
+# fatal: the node is up either way.
+- name: Finish with Omarchy's Tailscale installer
+  when: tailscale_pkg.rc != 0
+  block:
+    - name: Read whether the node is on the tailnet
+      ansible.builtin.command: tailscale status --json
+      register: tailscale_status_after_up
+      changed_when: false
+      failed_when: false
+      check_mode: false
+
+    - name: Add Omarchy's operator, Taildrop, bar plugin and web app
+      ansible.builtin.command: omarchy-install-service-tailscale
+      register: tailscale_omarchy_install
+      when: >-
+        tailscale_status_after_up.rc == 0
+        and (tailscale_status_after_up.stdout | from_json).BackendState == 'Running'
+      changed_when: true
+      failed_when: false
+
+    - name: Report that the node is not enrolled yet
+      ansible.builtin.debug:
+        msg: >-
+          Tailscale is installed but this host is not on the tailnet, and TAILSCALE_AUTH_KEY
+          is not set in .env. Run `sudo tailscale up --accept-dns --accept-routes
+          --operator=$USER` and sign in at the URL it prints, then re-run this role for
+          Omarchy's bar plugin and web app.
+      when: tailscale_omarchy_install is skipped
+
+    - name: Report that Omarchy's Tailscale installer did not finish cleanly
+      ansible.builtin.debug:
+        msg: >-
+          `omarchy-install-service-tailscale` exited {{ tailscale_omarchy_install.rc }}.
+          The node is enrolled; re-run the script by hand for the bar plugin and web app.
+      when:
+        - tailscale_omarchy_install is not skipped
+        - tailscale_omarchy_install.rc != 0
+
+# ─── Node-key expiry ──────────────────────────────────────────────────────────
+# Disable node-key expiry via the Tailscale REST API. The CLI has no equivalent
+# command, so we POST directly. The device identifier is this node's stable ID
+# from `tailscale status --json` (Self.ID, which the API accepts as its nodeId).
+#
+# Gated on the OAuth client ALONE — deliberately not on TAILSCALE_AUTH_KEY too.
+# The auth key enrols the node and is spent; this block maintains a setting on
+# an already-enrolled node, which is a separate job with a separate credential.
+# Coupling them meant that blanking the auth key on a long-since-enrolled host
+# also switched off key-expiry maintenance, with no error — precisely the quiet
+# drift the guards above exist to make loud.
+#
+# What the block does still need is a node to act on, so it reads the device ID
+# first and no-ops with a note when there isn't one yet. That read comes BEFORE
+# the token exchange so an unenrolled host does not mint a credential it will
+# not use, and it is a fresh read rather than a reuse of `_tailscale_status`
+# above, which on a first run was captured before `tailscale up` and carries no
+# Self.ID.
+- name: (Optional) Disable key expiry when an OAuth client is configured
+  when: tailscale_oauth_configured | bool
+  block:
+    - name: Read Tailscale status to get this node's stable ID
+      ansible.builtin.command: tailscale status --json
+      register: _tailscale_status_for_id
+      changed_when: false
+      failed_when: false # an unenrolled node exits non-zero; handled below, not fatal
+      check_mode: false # read-only probe; run in --check so the from_json below has real JSON
+
+    # Every step defaults, because an unenrolled node can give an empty stdout,
+    # a null Self, or a Self with no ID depending on how far setup got.
+    - name: Extract this node's stable device ID
+      ansible.builtin.set_fact:
+        tailscale_device_id: >-
+          {{ ((_tailscale_status_for_id.stdout | default('{}', true) | from_json).Self
+              | default({}, true)).ID | default('', true) }}
+
+    - name: Report that key expiry cannot be managed until the node is enrolled
+      ansible.builtin.debug:
+        msg: >-
+          Skipping key-expiry: `tailscale status` reports no device ID, so this
+          host is not on the tailnet yet and there is nothing to set the flag on.
+          Enrol it — set TAILSCALE_AUTH_KEY in .env, or run
+          `omarchy-install-service-tailscale` by hand — then re-run this role.
+      when: tailscale_device_id | length == 0
+
+    - name: Manage key expiry for this node
+      when: tailscale_device_id | length > 0
+      block:
+        # Documented flow: POST client_id + client_secret form-encoded, with no
+        # grant_type parameter (Tailscale's own curl example omits it). The token
+        # that comes back lives one hour, which is not configurable — fine here,
+        # since it is used twice and discarded rather than written anywhere.
+        #
+        # check_mode: false on both reads below — ansible.builtin.uri declares no
+        # check-mode support, so under --check it is SKIPPED and the registers it
+        # feeds go undefined, blowing up the set_fact and when: beneath them. Both
+        # are read-only (minting a one-hour token changes no durable state), so
+        # forcing them during a dry run is safe and is what makes the dry run
+        # exercise the real credential. The POST deliberately does NOT get the
+        # flag: it is the one write, and it should stay skipped under --check.
+        - name: Exchange OAuth client credentials for a short-lived API access token
+          ansible.builtin.uri:
+            url: https://api.tailscale.com/api/v2/oauth/token
+            method: POST
+            body_format: form-urlencoded
+            body:
+              client_id: "{{ tailscale_oauth_client_id }}"
+              client_secret: "{{ tailscale_oauth_client_secret }}"
+            status_code: [200]
+          register: _tailscale_oauth
+          changed_when: false
+          check_mode: false
+          no_log: true
+
+        - name: Keep the bearer token for the two API calls below
+          ansible.builtin.set_fact:
+            tailscale_api_token: "{{ _tailscale_oauth.json.access_token }}"
+          no_log: true
+
+        # Read the current setting so the POST below is skipped once it has taken.
+        # Without this the role reports one CHANGED task on every converged run
+        # forever: the POST returns 200 whether or not it altered anything, so the
+        # response cannot distinguish the two. `?fields=all` is what includes
+        # keyExpiryDisabled in the device object; the default field set omits it.
+        - name: Read this node's current key-expiry setting
+          ansible.builtin.uri:
+            url: "https://api.tailscale.com/api/v2/device/{{ tailscale_device_id }}?fields=all"
+            method: GET
+            headers:
+              Authorization: "Bearer {{ tailscale_api_token }}"
+            # 403/404: the OAuth client belongs to another tailnet than this node,
+            # as on archs-mac-mini, whose client is ArchAuto's but whose node is on Frank's tailnet.
+            status_code: [200, 403, 404]
+          register: _tailscale_device
+          changed_when: false
+          check_mode: false
+          no_log: true
+
+        - name: Report that the OAuth client cannot see this node
+          ansible.builtin.debug:
+            msg: >-
+              Skipping key-expiry: the OAuth client got HTTP {{ _tailscale_device.status }}
+              for this node, so the node is on another tailnet than the client.
+              Manage its key expiry in that tailnet's admin console.
+          when: _tailscale_device.status != 200
+
+        - name: Disable key expiry for this node
+          ansible.builtin.uri:
+            url: "https://api.tailscale.com/api/v2/device/{{ tailscale_device_id }}/key"
+            method: POST
+            headers:
+              Authorization: "Bearer {{ tailscale_api_token }}"
+            body_format: json
+            body:
+              keyExpiryDisabled: true
+            status_code: [200]
+          no_log: true
+          when:
+            - _tailscale_device.status == 200
+            - not (_tailscale_device.json.keyExpiryDisabled | default(false) | bool)
