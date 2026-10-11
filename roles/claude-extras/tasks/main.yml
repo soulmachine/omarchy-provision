@@ -8,6 +8,9 @@
 
 # cux, the Claude usage/account switcher. A mise npm tool like Omarchy's own `cf`, so the
 # mise role's `mise up` upgrades it with everything else (grilling Q19).
+# allow_low_downloads: mise's npm installer refuses a package under 1000 weekly downloads,
+# and cux has 57 (measured 2026-10-11). The Macs install the same package with npm
+# (DECISIONS Q7).
 - name: Ensure cux is installed through mise
   ansible.builtin.include_role:
     name: mise
@@ -15,6 +18,7 @@
   vars:
     mise_tool: "npm:@inulute/cux"
     mise_cmd: cux
+    mise_opts: allow_low_downloads=true
 
 # claude-swap ships two entrypoints, `claude-swap` and the short `cswap`.
 #

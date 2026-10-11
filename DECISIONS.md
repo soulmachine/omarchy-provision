@@ -60,3 +60,13 @@
 **Justification:** `~/.config/ghostty/config` on mac-mini-2018-omarchy is Omarchy's, read 2026-10-11. Reversible by adding one copy task.
 **Outcome:** applied
 **Ref:** (this commit)
+
+## Q7 — interactive/omarchy-port-cux — deviation
+
+**Question:** The first real run on mac-mini-2018-omarchy failed at `mise use -g npm:@inulute/cux@latest`: mise's npm installer refuses a package with fewer than 1000 weekly downloads, and cux has 57. Install it anyway, or drop it?
+**Options considered:** drop cux from the port / install it with `npm install -g` outside mise / pass `allow_low_downloads=true` as a mise tool option, which mise records in config.toml
+**Chosen:** The tool option, through a new optional `mise_opts` in the shared mise tool task. Only cux needs it: opencli, paseo, defuddle, playwright and cf are all above the threshold.
+**Decided-by:** agent
+**Justification:** The guard is against typosquats of unknown packages; cux is the package the Macs already install with npm (macbook-provision roles/claude-extras), so the review mise asks for has been done. One install path per tool stays true (grilling Q5).
+**Outcome:** applied
+**Ref:** (this commit)

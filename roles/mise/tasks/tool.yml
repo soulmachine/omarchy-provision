@@ -8,6 +8,7 @@
 #       mise_tool: "npm:@playwright/cli"   # what `mise ls` lists
 #       mise_cmd: playwright-cli           # optional: the stub omarchy-mise-install writes
 #       mise_bin: playwright-cli           # optional: the executable in the package, if not mise_cmd
+#       mise_opts: allow_low_downloads=true  # optional: tool options, written into config.toml
 #
 # The stub in ~/.local/bin is the shape Omarchy gives its own agents: it runs `mise use -g`
 # then `mise x`, so the first call installs the tool. Upgrades are the mise role's `mise up`.
@@ -21,7 +22,7 @@
 # with `installed: false`, and `mise use -g` installs it. no_log for the GitHub token; the
 # task name says what to run by hand on a failure.
 - name: Add the mise tool {{ mise_tool }}
-  ansible.builtin.command: mise use -g --quiet {{ mise_tool }}@latest
+  ansible.builtin.command: mise use -g --quiet "{{ mise_tool }}{{ '[' ~ mise_opts ~ ']' if mise_opts is defined else '' }}@latest"
   environment:
     MISE_MINIMUM_RELEASE_AGE: "0"
     GITHUB_API_TOKEN: "{{ lookup('env', 'GITHUB_TOKEN') }}"
