@@ -19,6 +19,15 @@ repos:
         pass_filenames: false
         files: ^DECISIONS\.md$
 
+      # The orphan detector in the skills role carries its own fixture; this keeps the
+      # fixture and the rule in step, as in macbook-provision.
+      - id: skills-orphan-rule
+        name: find-orphans.py self-test
+        entry: python3 roles/skills/files/find-orphans.py --self-test
+        language: system
+        pass_filenames: false
+        files: ^roles/skills/
+
       - id: readme-roles
         name: README role table matches main.yml
         entry: scripts/check-readme-roles.sh

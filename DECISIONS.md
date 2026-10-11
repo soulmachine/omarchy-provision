@@ -20,3 +20,13 @@
 **Justification:** `/usr/bin/omarchy-update`'s own comment on the migration ordering, read 2026-10-11. Re-implementing its sequence in the play would copy five of its scripts. Reversible by replacing one task, and the Sunday cron keeps running the same command, so nothing is lost either way.
 **Outcome:** assumed
 **Ref:** (this commit)
+
+## Q3 — interactive/omarchy-port-aur — deviation
+
+**Question:** Q1 chose `community.general.pacman` with `executable: yay` for AUR packages. On the box the module fails for `kimi-code-bin` with "target not found": it lists its targets with `--sync --print-format`, which yay answers only for repo packages. How do AUR installs run?
+**Options considered:** the pacman module with yay / a `yay -S --needed --noconfirm` command behind a `pacman -Q` probe, shared as `roles/pacman/tasks/aur.yml` / the `kewlfft.aur` Galaxy collection
+**Chosen:** `roles/pacman/tasks/aur.yml`, included with `aur_pkg`. No become: yay refuses root and calls sudo itself. Upgrades stay with `omarchy-update`'s `yay -Sua`.
+**Decided-by:** agent
+**Justification:** Measured on mac-mini-2018-omarchy on 2026-10-11 with `--check`. The task file is twelve lines and no new collection; the three AUR roles (kimi-code, intellij-idea, pacman's Sublime Text) include it.
+**Outcome:** applied
+**Ref:** 74170fc

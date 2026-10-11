@@ -1,0 +1,25 @@
+---
+# oh-my-pi is Omarchy's mise tool (`github:can1357/oh-my-pi`) with its ~/.local/bin/omp stub;
+# the mise role's `mise up` keeps it current, so the Mac role's `omp update` step is gone.
+- name: Ensure oh-my-pi is installed through mise
+  ansible.builtin.include_role:
+    name: mise
+    tasks_from: tool
+  vars:
+    mise_tool: "github:can1357/oh-my-pi"
+    mise_cmd: omp
+    mise_bin: omp
+
+- name: Add omp-yolo alias to .bashrc
+  ansible.builtin.lineinfile:
+    path: "{{ lookup('env', 'HOME') }}/.bashrc"
+    line: 'alias omp-yolo="omp --thinking=xhigh --yolo"'
+    regexp: '^alias omp-yolo='
+    state: present
+
+- name: Add omp shell completions to .bashrc
+  ansible.builtin.lineinfile:
+    path: "{{ lookup('env', 'HOME') }}/.bashrc"
+    line: eval "$(omp completions bash)"
+    regexp: omp completions bash
+    state: present

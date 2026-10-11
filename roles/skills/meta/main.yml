@@ -1,0 +1,6 @@
+---
+dependencies:
+  - claude-code
+  - codex
+  # The adopt task shells out to `agent-sync`, so the role that installs it has to run first.
+  - agent-sync
