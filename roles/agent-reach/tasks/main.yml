@@ -86,5 +86,4 @@
     - "'有更新' in (agent_reach_check.stdout | default(''))"
   changed_when: true
 
-- name: Install OpenCLI
-  ansible.builtin.import_tasks: opencli.yml
+# No OpenCLI here: mise refuses it (DECISIONS Q8), and its X route needs a logged-in Chrome.

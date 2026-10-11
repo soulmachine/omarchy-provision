@@ -70,3 +70,13 @@
 **Justification:** The guard is against typosquats of unknown packages; cux is the package the Macs already install with npm (macbook-provision roles/claude-extras), so the review mise asks for has been done. One install path per tool stays true (grilling Q5).
 **Outcome:** applied
 **Ref:** (this commit)
+
+## Q8 — interactive/omarchy-port-opencli — deviation
+
+**Question:** The agent-reach role's OpenCLI step, a mise `npm:@jackwener/opencli` tool, failed the first real run: mise's npm installer reports a trust downgrade, because version 0.1.0 was published with a provenance attestation and 1.8.8 has none. Exempt it or drop it?
+**Options considered:** `trust_policy_excludes` on the tool, which exempts the package from the check / `mise settings npm.shell_out=true`, which bypasses every check / drop the step
+**Chosen:** Drop the step. The role's README says how to add it back after a review of the release.
+**Decided-by:** agent
+**Justification:** A provenance drop is the signal the check exists for, and an unattended run should not waive it. OpenCLI's use here, X search through a logged-in Chrome plus a one-time extension click, is not something a headless always-on host does. agent-reach itself installed and reports five channels up. Reversible with one include.
+**Outcome:** assumed
+**Ref:** (this commit)

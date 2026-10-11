@@ -21,6 +21,10 @@
 - **Optional channels are not provisioned.** Twitter, 小红书, Reddit and others need cookies or a
   Chrome-extension click, and headless `claude -p` cannot answer the doc's "which channels?" prompt.
   Only the zero-config core channels are set up. Run `agent-reach doctor` interactively for the rest.
-- **OpenCLI is installed separately** (`tasks/opencli.yml`). It is agent-reach's X fallback, and
-  agent-reach's own installer adds it only on a fresh install, so it is a mise npm tool here and
-  `mise up` keeps it. Its Chrome extension still needs one manual click.
+- **OpenCLI is not installed.** On the Macs it is agent-reach's X fallback (`opencli twitter
+  search` through a logged-in Chrome). Here mise's npm installer refuses it: an earlier release
+  carried a provenance attestation and the current one has none, which its trust policy treats
+  as a possible tampered release (DECISIONS Q8). The X channel also needs a Chrome extension
+  click that a headless host never gets. To take it anyway after reviewing the release, add a
+  mise include for `npm:@jackwener/opencli` with
+  `mise_opts: trust_policy_excludes=["@jackwener/opencli"]`.
