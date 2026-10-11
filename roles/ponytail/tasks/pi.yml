@@ -14,11 +14,11 @@
 # `pi update` spawns bun).
 - name: Install the ponytail pi package
   ansible.builtin.command:
-    cmd: "{{ ponytail_home }}/.bun/bin/pi install {{ ponytail_pi_source }}"
+    cmd: "{{ ponytail_home }}/.local/bin/pi install {{ ponytail_pi_source }}"
     chdir: "{{ ponytail_home }}"
     creates: "{{ ponytail_pi_dir }}"
   environment:
-    PATH: "{{ ponytail_home }}/.bun/bin:{{ lookup('env', 'PATH') }}"
+    PATH: "{{ ponytail_home }}/.local/bin:{{ lookup('env', 'PATH') }}"
 
 # Refresh: `pi update --extension <source>` fetches and hard-resets an unpinned
 # git package to upstream HEAD, exiting 0 whether or not anything moved. The
@@ -40,10 +40,10 @@
 
     - name: Update the ponytail pi package
       ansible.builtin.command:
-        cmd: "{{ ponytail_home }}/.bun/bin/pi update --extension {{ ponytail_pi_source }}"
+        cmd: "{{ ponytail_home }}/.local/bin/pi update --extension {{ ponytail_pi_source }}"
         chdir: "{{ ponytail_home }}"
       environment:
-        PATH: "{{ ponytail_home }}/.bun/bin:{{ lookup('env', 'PATH') }}"
+        PATH: "{{ ponytail_home }}/.local/bin:{{ lookup('env', 'PATH') }}"
       changed_when: false
 
     - name: Check whether the ponytail pi package was updated # noqa: command-instead-of-module

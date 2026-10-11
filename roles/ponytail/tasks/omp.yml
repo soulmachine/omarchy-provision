@@ -8,9 +8,9 @@
 # `{"npm": [{name, version, enabled, …}], "marketplace": […]}`: the names gate
 # the install and the version is the state the upgrade gate reads.
 - name: List oh-my-pi plugins
-  ansible.builtin.command: "{{ ponytail_home }}/.bun/bin/omp plugin list --json"
+  ansible.builtin.command: "{{ ponytail_home }}/.local/bin/omp plugin list --json"
   environment:
-    PATH: "{{ ponytail_home }}/.bun/bin:{{ lookup('env', 'PATH') }}"
+    PATH: "{{ ponytail_home }}/.local/bin:{{ lookup('env', 'PATH') }}"
   register: ponytail_omp_list
   changed_when: false
   check_mode: false
@@ -34,9 +34,9 @@
   check_mode: false
 
 - name: Install or upgrade the ponytail oh-my-pi plugin
-  ansible.builtin.command: "{{ ponytail_home }}/.bun/bin/omp plugin install {{ ponytail_npm_package }}"
+  ansible.builtin.command: "{{ ponytail_home }}/.local/bin/omp plugin install {{ ponytail_npm_package }}"
   environment:
-    PATH: "{{ ponytail_home }}/.bun/bin:{{ lookup('env', 'PATH') }}"
+    PATH: "{{ ponytail_home }}/.local/bin:{{ lookup('env', 'PATH') }}"
   vars:
     ponytail_omp_installed: >-
       {{ (ponytail_omp_list.stdout | from_json).npm

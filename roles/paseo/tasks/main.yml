@@ -65,7 +65,9 @@
 
 # A restart kills the daemon's running agents, so it is reserved for the three changes
 # above. `started` on a running unit is a no-op. An unloaded or stopped unit, including
-# one someone stopped on purpose, is started again on the next run.
+# one someone stopped on purpose, is started again on the next run. Skipped under
+# `--check` on a host where the unit file above was not written yet: systemd cannot
+# report on a unit that does not exist.
 - name: Run the Paseo daemon
   ansible.builtin.systemd_service:
     name: paseo-daemon
@@ -73,6 +75,7 @@
     daemon_reload: true
     enabled: true
     state: "{{ 'restarted' if paseo_restart | bool else 'started' }}"
+  when: not (ansible_check_mode and paseo_unit is changed)
 
 # An active unit is not a running daemon: with `Restart=always` a daemon that fails on
 # every start still shows as active while it loops. Ask the daemon itself, allowing up

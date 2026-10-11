@@ -59,3 +59,5 @@
     src: "../../.agents/skills/multica-cli"
     dest: "{{ lookup('env', 'HOME') }}/.claude/skills/multica-cli"
     state: link
+    # The copy above is skipped under `--check`, so the target may not exist yet.
+    force: true
