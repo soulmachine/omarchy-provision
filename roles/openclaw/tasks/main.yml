@@ -14,9 +14,9 @@
   when: openclaw_check.rc != 0
   changed_when: true
 
-# Onboarding stays a manual step (DECISIONS Q11): it writes the gateway provider, which belongs
-# to cliproxy-tier, installs an always-on daemon, and sends a test request that needs the
-# gateway tunnel up. So the play only says it is missing.
+# Onboarding is `cliproxy-tier <host>`'s job on mac-mini-m2 (DECISIONS Q15, superseding Q11's
+# manual step): it writes the gateway provider, the key in ~/.openclaw/.env and the always-on
+# daemon. So the play only says when it has not run yet.
 - name: Check whether OpenClaw is onboarded
   ansible.builtin.stat:
     path: "{{ lookup('env', 'HOME') }}/.openclaw/openclaw.json"
@@ -25,7 +25,43 @@
 - name: Report that OpenClaw is not onboarded
   ansible.builtin.debug:
     msg: >-
-      OpenClaw is installed but not onboarded, so it has no model. Run the one-time onboarding
-      in ~/.agents/docs/gateway-ops.md ("Omarchy agents on a gateway-only host"), then
-      `cliproxy-tier <host>` on mac-mini-m2.
+      OpenClaw is installed but not onboarded, so it has no model. Run `cliproxy-tier <host>` on
+      mac-mini-m2, which onboards it through the gateway.
   when: not openclaw_config.stat.exists
+
+# The daemon's service file names an absolute Node and OpenClaw entrypoint, so after the nodejs
+# role moves Node or OpenClaw itself is upgraded, it keeps running the old pair, and it breaks once
+# mise prunes that Node. `gateway install --force` rewrites the service for the current pair and
+# restarts it. OpenClaw prefers a system Node where one exists (Omarchy's /usr/bin/node), so only a
+# service on a mise Node is compared with the current Node; any service is compared by version.
+- name: Read the OpenClaw daemon's state
+  ansible.builtin.command: openclaw gateway status --json
+  register: openclaw_status
+  changed_when: false
+  failed_when: false
+  check_mode: false
+
+- name: Read the current Node
+  ansible.builtin.command: node -p process.execPath
+  register: openclaw_node
+  changed_when: false
+  failed_when: false
+  check_mode: false
+
+- name: Decide whether the OpenClaw daemon runs an old Node or OpenClaw
+  ansible.builtin.set_fact:
+    openclaw_daemon_stale: >-
+      {{ (openclaw_svc.command.programArguments | default([])) | length > 0
+         and (('/mise/installs/' in openclaw_svc.command.programArguments[0]
+               and openclaw_svc.command.programArguments[0] != openclaw_node.stdout | trim)
+              or openclaw_svc.layout.packageVersion | default('') != openclaw_state.cli.version | default('')) }}
+  vars:
+    openclaw_state: >-
+      {{ openclaw_status.stdout | from_json
+         if openclaw_status.rc == 0 and (openclaw_status.stdout | trim)[:1] == '{' else {} }}
+    openclaw_svc: "{{ openclaw_state.service | default({}) }}"
+
+- name: Rewrite the OpenClaw daemon for the current Node and OpenClaw
+  ansible.builtin.command: openclaw gateway install --force
+  when: openclaw_daemon_stale | bool
+  changed_when: true

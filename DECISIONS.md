@@ -140,3 +140,14 @@
 **Justification:** One owner for the whole update, as on the Macs and Ubuntu hosts. An immediate reboot would cut off the PLAY RECAP that the sweep waits for in `/tmp/provision.log`, and Arch's tmpfs `/tmp` erases that log at boot, so the sweep would report a failure. Five minutes is well past the sweep's 60 s poll. The flag is removed because nothing in Omarchy clears it, and a stale one would reboot every night. Tested on mac-mini-2018-omarchy: ansible-lint passed on both roles; `always-on` changed 2 then 0, and the crontab now holds only agent-sync; `pacman` in check mode with the flag set notified the handler, while `omarchy-update` and the handler were skipped; the handler's command, with `/bin/true` in place of the reboot, scheduled a 5-minute timer once and exited 0 on a second run. Not tested: a real reboot through the handler.
 **Outcome:** applied
 **Ref:** supersedes coding-agent Q364's Sunday cron; coding-agent update-packages.cron.md
+
+## Q15 — interactive/provision-repos-agents-sync — deviation
+
+**Question:** Q11 left OpenClaw's onboarding as a manual step. With the agents now ported to macbook-provision and ubuntu-provision (coding-agent Q401), Frank chose to have `cliproxy-tier` run the onboarding on every host. What changes here?
+**Options considered:** keep the manual step on this host only / follow the fleet
+**Chosen:** Follow the fleet. The `openclaw` role's message now points at `cliproxy-tier <host>`, and the README drops the manual onboarding step. The role also gets the fleet's stale-daemon check: when the daemon's OpenClaw version lags the CLI (after a pacman upgrade here), or its mise Node no longer matches the current one, `openclaw gateway install --force` rewrites and restarts it. Here the service uses the system `/usr/bin/node`, so only the version half can fire.
+**Decided-by:** human
+**Justification:** Frank's answer in the coding-agent Q401 session. The onboarding writes gateway config, which AGENTS.md assigns to `cliproxy-tier`, so the move also matches the rule that this repo never writes gateway files. Also fixed: the `herdr` role cited DECISIONS Q12 for the rename hook, a number the parallel purelymail entry took; it now cites Q13. Tested here: two `openclaw` role runs changed nothing.
+**Outcome:** applied
+**Supersedes:** Q11 — only its manual-onboarding part; the roles stand
+**Ref:** (this commit); coding-agent Q401

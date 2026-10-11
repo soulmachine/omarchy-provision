@@ -96,7 +96,7 @@
     state: link
     force: true
 
-# The rename hook from soulmachine/skills' herdr-rename-hook skill (DECISIONS Q12): a Claude Code
+# The rename hook from soulmachine/skills' herdr-rename-hook skill (DECISIONS Q13): a Claude Code
 # or Codex `/rename` is mirrored onto the calling Herdr pane's agent, pane and tab. The skills
 # role adopts that skill into the store; its install.sh owns the wiring (the script in
 # ~/.claude/hooks, merged entries in ~/.claude/settings.json and ~/.codex/hooks.json), and
