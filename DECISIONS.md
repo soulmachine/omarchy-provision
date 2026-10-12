@@ -161,3 +161,14 @@
 **Justification:** Frank chose the full Bridge package on 2026-10-12: the host has a Hyprland desktop, and it matches the macOS cask and the Ubuntu .deb, which are GUI builds too.
 **Outcome:** applied
 **Ref:** macbook-provision Q223, ubuntu-provision Q28
+
+## Q17 — interactive/whats-next-audit — gate-resolution
+
+**Question:** The port's four `assumed` calls, Q2 (`omarchy-update -y` as the upgrade step), Q4 (tailscale with an auth key), Q5 (paseo daemon restart after `mise up`) and Q8 (OpenCLI's npm trust downgrade), were listed to Frank on 2026-10-12. Ratify them?
+**Options considered:** ratify all four / revisit any / leave them assumed
+**Chosen:** Ratified all four as applied, in one batch.
+**Decided-by:** human
+**Justification:** Each has been running in the nightly sweep on mac-mini-2018-omarchy since the port; none was questioned.
+**Outcome:** applied
+**Ref:** (this commit); macbook-provision Q224
+**Supersedes:** Q2, Q4, Q5, Q8 — assumed calls ratified by the user
