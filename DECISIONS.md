@@ -202,3 +202,14 @@
 **Justification:** On 2026-10-12, the AUR package was one maintainer's, had 0 votes and was a release behind (0.50.5 against 0.51.0). The AppImage is upstream's own build. `omarchy-update` upgrades only pacman, AUR and mise packages, so this role's re-download is the upgrade path. That departs from "a tool role adds its tool when missing and nothing else" (docs/writing-roles.md), and it costs 218 MB a run. get_url reports changed only when the bytes differ.
 **Outcome:** applied
 **Ref:** (this commit); macbook-provision Q237, ubuntu-provision Q34
+
+## Q21 — interactive/browseros-neo — deviation
+
+**Question:** Upstream macbook-provision Q240 registers neo's MCP server in every agent and corrects two parts of upstream Q237: the port and the skill refresh. Port it?
+**Options considered:** port it as is / keep Q237's shape
+**Chosen:** Ported as is: URL `http://127.0.0.1:9010/mcp`; the same `mcp add` and JSON-merge tables; an entry with another URL is replaced; the skill installs only when missing. This repo's install steps are unchanged.
+**Decided-by:** human (the other agents: Frank, 2026-10-12); agent (the port)
+**Justification:** The Linux build is the same Chromium with the same `kDefaultProxyPort = 9010` patch, so the port fix applies here too. The agents and their config paths are the same as on macOS.
+**Outcome:** applied
+**Ref:** (this commit); macbook-provision Q240, omarchy-provision Q20
+**Supersedes:** omarchy-provision Q20 — its MCP port 9200 and its skill refresh on every play
