@@ -234,3 +234,13 @@
 **Outcome:** applied
 **Ref:** (this commit)
 **Supersedes:** Q22 — only its pacman source for `bw`
+
+## Q24 — interactive/upstream-macos-only — scope
+
+**Question:** Upstream macbook-provision adds `macos-connectors` (Q236, CLIs for the Apple apps) and `ego-browser` (Q239 and Q241, the Ego Lite browser and its skill). Port them?
+**Options considered:** port them / no role
+**Chosen:** No role for either, and no `citrolabs/ego-lite` entry in the skills role. README lists both with the omitted roles.
+**Decided-by:** agent
+**Justification:** The connector CLIs drive macOS apps. Ego Lite ships no Linux build: its skill's `scripts/install.sh` downloads only macOS DMGs, and lite.ego.app offers only macOS and Windows (checked 2026-10-12). Precedent Q19 (`removemacai`). ubuntu-provision records the same calls as Q38 and Q39.
+**Outcome:** applied
+**Ref:** (this commit); macbook-provision Q236, Q239, Q241
