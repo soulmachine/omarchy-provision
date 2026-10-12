@@ -172,3 +172,13 @@
 **Outcome:** applied
 **Ref:** (this commit); macbook-provision Q224
 **Supersedes:** Q2, Q4, Q5, Q8 — assumed calls ratified by the user
+
+## Q18 — interactive/lcu-role — scope
+
+**Question:** Upstream macbook-provision Q228 adds an `lcu` role (Local Computer Use, amontlabs/lcu). Port it?
+**Options considered:** a role gated on the ChatGPT app that skips today / no role
+**Chosen:** No role. LCU needs the ChatGPT desktop app (a .deb for Ubuntu, no Arch package in this repo's layers) and an X11 desktop with a D-Bus session; mac-mini-2018-omarchy has neither, and its Hyprland desktop is native Wayland, which LCU does not support. README's "不移植的内容" lists it.
+**Decided-by:** human
+**Justification:** Frank chose "skip the Linux roles" on 2026-10-12 when the prerequisites were laid out; a role that always skips is dead code.
+**Outcome:** applied
+**Ref:** (this commit); macbook-provision Q228, ubuntu-provision Q32
