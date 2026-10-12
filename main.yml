@@ -26,6 +26,7 @@
     - claude-code
     - claude-extras
     - typesafe
+    - bitwarden
     - codex
     - opencode
     - omp

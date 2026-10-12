@@ -113,6 +113,7 @@ pre-commit run --all-files
 | claude-code | Claude Code CLI（Omarchy 的 mise 工具 `claude`）及插件、marketplace 与 settings（依赖 nodejs） |
 | claude-extras | Claude Code 周边工具：mise `npm:@inulute/cux`、uv 工具 `claude-swap`（依赖 nodejs、uv、claude-code） |
 | typesafe | TypeSafe Jev 模型相关的一切：官方 `typesafe-ai` skill（不需要 key），以及两个 Claude Code 插件 fast-jev-compaction 与 claude-jev；把 `CLAUDE_CODE_ENABLE_FUNCTION_HOOKS` 与 `TYPESAFE_API_KEY` 写入 `~/.claude/settings.json` 的 `env`；环境中无 `TYPESAFE_API_KEY` 时只跳过插件部分（依赖 claude-code、nodejs） |
+| bitwarden | Bitwarden 客户端（用于自建的 Vaultwarden），全部来自 pacman `extra`：`bitwarden-cli`（命令 `bw`）、`rbw`；有桌面会话（`/usr/share/xsessions` 或 `/usr/share/wayland-sessions` 下有 `.desktop`，Hyprland 自带）时再装官方 Electron 桌面 App `bitwarden`；由 `omarchy-update` 升级；只安装，服务器地址、邮箱与登录需手动设置 |
 | codex | OpenAI Codex CLI（Omarchy 的 mise 工具 `codex`），并安装 [open-pstack](https://github.com/ericlitman/open-pstack) 的 `pstack` 插件（Claude Code 那一半在 claude-code role 的插件列表里；`/pstack:setup-pstack` 需手动运行）（依赖 nodejs） |
 | opencode | OpenCode CLI（Omarchy 的 mise 工具 `opencode`）；并用 `npx oh-my-openagent` 写入 `~/.config/opencode/opencode.json`，由版本戳门控，避免每次 play 重装（依赖 nodejs） |
 | omp | oh-my-pi（Omarchy 的 mise 工具，命令 `omp`） |

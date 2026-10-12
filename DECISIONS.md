@@ -213,3 +213,13 @@
 **Outcome:** applied
 **Ref:** (this commit); macbook-provision Q240, omarchy-provision Q20
 **Supersedes:** omarchy-provision Q20 — its MCP port 9200 and its skill refresh on every play
+
+## Q22 — interactive/bitwarden — gate-resolution
+
+**Question:** Upstream macbook-provision Q242 adds a `bitwarden` role: the Electron app, `bw` and `rbw`. Frank wants the app skipped on headless Linux hosts, and Q10 calls the Omarchy hosts headless always-on servers. Where do the clients come from, and does an Omarchy host get the app?
+**Options considered:** pacman `extra` / mise or npm for `bw`; the app on every host / on hosts with a desktop session file / on no Omarchy host
+**Chosen:** pacman `bitwarden-cli` and `rbw`, and pacman `bitwarden` when `/usr/share/xsessions` or `/usr/share/wayland-sessions` holds a `*.desktop` file. This is the same test as ubuntu-provision Q36. Omarchy's Hyprland session passes it, so the Omarchy hosts get the app, as they get obsidian and BrowserOS neo.
+**Decided-by:** human (the headless rule, and that it counts Omarchy as having a desktop: Frank, 2026-10-12); agent (the sources)
+**Justification:** All three are in Arch's `extra`, the repo's first install layer (docs/writing-roles.md), and `omarchy-update` upgrades them (Q2). The Arch `bitwarden` build trails upstream by a few releases, which the extra-repo layer accepts in exchange for one upgrade path.
+**Outcome:** applied
+**Ref:** (this commit); macbook-provision Q242
