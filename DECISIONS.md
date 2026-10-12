@@ -182,3 +182,13 @@
 **Justification:** Frank chose "skip the Linux roles" on 2026-10-12 when the prerequisites were laid out; a role that always skips is dead code.
 **Outcome:** applied
 **Ref:** (this commit); macbook-provision Q228, ubuntu-provision Q32
+
+## Q19 — interactive/removemacai — scope
+
+**Question:** Upstream macbook-provision Q229 adds a `removemacai` role (RemoveMacAI's CLI, its configuration profile and per-user tweaks). Port it?
+**Options considered:** port it / no role
+**Chosen:** No role. RemoveMacAI changes macOS settings only: Apple Intelligence, a macOS configuration profile, and Finder, Dock and macOS defaults. Omarchy has none of them. README's list of roles not ported names it.
+**Decided-by:** agent
+**Justification:** Precedent macbook-provision Q222 (`1password`): a macOS-only role is not ported, and the sibling repos list it among the roles they leave out.
+**Outcome:** applied
+**Ref:** (this commit); macbook-provision Q229, ubuntu-provision Q33
