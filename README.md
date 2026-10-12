@@ -136,6 +136,7 @@ pre-commit run --all-files
 | cloudflare | Cloudflare CLI：Omarchy 的 mise 工具 `npm:cf`（依赖 claude-code） |
 | multica-cli | 官方安装脚本，同 ubuntu-provision |
 | purelymail | 同 ubuntu-provision；token 手工放在 `~/.profile`，`~/.bash_profile` 已加一行 source 它 |
+| email | Himalaya 邮件 CLI 与 Proton Mail Bridge（pacman）+ ortie OAuth CLI（GitHub release 二进制，同 ubuntu-provision）；账号配置手工完成 |
 | tailscale | `omarchy-install-service-tailscale` + systemd `tailscaled`；若环境中有 `TAILSCALE_AUTH_KEY` 则自动 `tailscale up`，可选通过 OAuth client 关闭 key 过期 |
 | zellij | 终端复用器（pacman）；tag `terminal-multiplexer` |
 | tmux | 终端复用器（pacman）；tag `terminal-multiplexer`（`pacman` role 的基础包里也有，重复无害） |

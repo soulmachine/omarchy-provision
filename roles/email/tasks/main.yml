@@ -1,0 +1,20 @@
+---
+# email: the terminal mail stack. Himalaya (github.com/pimalaya/himalaya) and Proton Mail Bridge
+# are Arch `extra` packages, so pacman installs them and `omarchy-update` upgrades them. ortie
+# (github.com/pimalaya/ortie, Himalaya's OAuth helper) is AUR-only and lags upstream, and this
+# repo has no AUR layer (DECISIONS Q10), so it comes from its GitHub release like ubuntu-provision.
+# Accounts are configured by hand (`~/.config/himalaya/config.toml`, `ortie configure`, the Bridge
+# login); this role installs the binaries only.
+
+- name: Install himalaya and Proton Mail Bridge
+  become: true
+  community.general.pacman:
+    name:
+      - himalaya
+      - protonmail-bridge
+    state: present
+
+- name: Install ortie
+  ansible.builtin.include_tasks: pimalaya.yml
+  vars:
+    email_tool: ortie

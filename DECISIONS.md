@@ -151,3 +151,13 @@
 **Outcome:** applied
 **Supersedes:** Q11 — only its manual-onboarding part; the roles stand
 **Ref:** (this commit); coding-agent Q401
+
+## Q16 — interactive/email-role — gate-resolution
+
+**Question:** How do the Himalaya CLI (github.com/pimalaya/himalaya), its OAuth helper ortie (github.com/pimalaya/ortie) and Proton Mail Bridge (proton.me/mail/bridge) reach mac-mini-2018-omarchy?
+**Options considered:** `extra/protonmail-bridge` (Qt GUI) / `extra/protonmail-bridge-core` (headless); ortie from the AUR (`ortie` 2.2.0, behind upstream's v2.3.0) / from its GitHub release tarball
+**Chosen:** One `email` role. himalaya and `protonmail-bridge` are `extra` packages, installed with pacman and upgraded by `omarchy-update` (Q2). ortie comes from its GitHub release through `tasks/pimalaya.yml`, the same parametrised copy of the purelymail role (Q12) that ubuntu-provision uses, because this repo has no AUR layer (Q10) and the AUR package lags. Accounts are configured by hand.
+**Decided-by:** human
+**Justification:** Frank chose the full Bridge package on 2026-10-12: the host has a Hyprland desktop, and it matches the macOS cask and the Ubuntu .deb, which are GUI builds too.
+**Outcome:** applied
+**Ref:** macbook-provision Q223, ubuntu-provision Q28
