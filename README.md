@@ -151,7 +151,7 @@ pre-commit run --all-files
 - **arch-mact2** 的 pre-refresh hook（只有 T2 硬件需要）。
 - **Sunshine**：Omarchy 的安装器有 bug，unit、web app 和 ufw 规则是手工做的一次性工作。
 
-macbook-provision 里没有移植的 role：`host-facts`、`shell`、`omarchy`（Omarchy 自身就是这三者）、`apple-container`、`cua`、`cmux`、`moshi`（没有 Linux 版）、`cc-switch`、`intellij-idea`、`kimi-code` 以及 `homebrew` 里的 Sublime Text（去掉：无头服务器用不上，2026-10-11 首次运行装上后又卸掉了）。OpenCLI（agent-reach 的 X 后备）也不装，见 `roles/agent-reach/README.md`。
+macbook-provision 里没有移植的 role：`host-facts`、`shell`、`omarchy`（Omarchy 自身就是这三者）、`apple-container`、`cua`、`cmux`、`moshi`（没有 Linux 版）、`cc-switch`、`intellij-idea`、`kimi-code`、`1password`（只用于有 `~/personal-agent` 的 macOS 主机，上游 Q222）以及 `homebrew` 里的 Sublime Text（去掉：无头服务器用不上，2026-10-11 首次运行装上后又卸掉了）。OpenCLI（agent-reach 的 X 后备）也不装，见 `roles/agent-reach/README.md`。
 
 ### Agent CLI 与技能
 
