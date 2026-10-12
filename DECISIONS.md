@@ -223,3 +223,14 @@
 **Justification:** All three are in Arch's `extra`, the repo's first install layer (docs/writing-roles.md), and `omarchy-update` upgrades them (Q2). The Arch `bitwarden` build trails upstream by a few releases, which the extra-repo layer accepts in exchange for one upgrade path.
 **Outcome:** applied
 **Ref:** (this commit); macbook-provision Q242
+
+## Q23 — interactive/bitwarden — deviation
+
+**Question:** Q22 installs `bw` from pacman `bitwarden-cli`. On mac-mini-2018-omarchy that package depends on `nodejs-lts-jod`, which conflicts with the installed `nodejs`, so pacman stops with "unresolvable package conflicts". Where does `bw` come from?
+**Options considered:** replace `nodejs` with `nodejs-lts-jod` / mise `npm:@bitwarden/cli` with a stub / the release zip
+**Chosen:** The mise tool `npm:@bitwarden/cli` with the `bw` stub, through `mise/tasks/tool.yml`. rbw and the desktop app stay on pacman.
+**Decided-by:** agent
+**Justification:** An npm global is the repo's first install layer (docs/writing-roles.md), as for gemini and defuddle. Swapping the system Node for an LTS build would change Node for every other tool on the host to suit one CLI. `mise up` in the mise role upgrades it.
+**Outcome:** applied
+**Ref:** (this commit)
+**Supersedes:** Q22 — only its pacman source for `bw`

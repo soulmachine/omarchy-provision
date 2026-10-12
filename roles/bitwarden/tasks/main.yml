@@ -1,15 +1,23 @@
 ---
-# Bitwarden clients for Frank's Vaultwarden (~/coding-agent/docs/vaultwarden.md), all from Arch's
-# `extra`: `bw`, `rbw` and the official Electron desktop app, which a headless host skips.
-# `omarchy-update` upgrades them (Q2). Install only: the server URL, email and login are set by
-# hand (upstream Q242).
-- name: Install the Bitwarden CLI and rbw
+# Bitwarden clients for Frank's Vaultwarden (~/coding-agent/docs/vaultwarden.md): `rbw` and the
+# official Electron desktop app from Arch's `extra`, the desktop app skipped on a headless host,
+# and the official `bw` CLI through mise. `omarchy-update` upgrades them (Q2). Install only: the
+# server URL, email and login are set by hand (upstream Q242).
+- name: Install rbw
   become: true
   community.general.pacman:
-    name:
-      - bitwarden-cli
-      - rbw
+    name: rbw
     state: present
+
+# Not pacman `bitwarden-cli`: it depends on `nodejs-lts-jod`, which conflicts with the
+# `nodejs` Omarchy installs (DECISIONS Q23).
+- name: Ensure the Bitwarden CLI is installed through mise
+  ansible.builtin.include_role:
+    name: mise
+    tasks_from: tool
+  vars:
+    mise_tool: "npm:@bitwarden/cli"
+    mise_cmd: bw
 
 # Headless means no X11 or Wayland session file (DECISIONS Q22). Omarchy's Hyprland ships one.
 - name: Look for a desktop session

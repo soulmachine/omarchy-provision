@@ -1,0 +1,4 @@
+---
+dependencies:
+  # `bw` is the mise npm tool `npm:@bitwarden/cli`.
+  - nodejs
