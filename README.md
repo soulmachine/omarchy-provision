@@ -129,6 +129,7 @@ pre-commit run --all-files
 | playwright-cli | Playwright CLI：mise `npm:@playwright/cli`，并安装其 skill（依赖 playwright） |
 | claude-mem | Claude 记忆插件；`npx -y claude-mem install` 为 claude-code / codex-cli / opencode 三者接线（依赖 nodejs、bun、uv） |
 | hermes | Hermes 个人 agent（Nous Research）的 CLI 版：`omarchy-install-hermes-cli`（mise pipx）；`~/.hermes/SOUL.md` 链接到 `~/.agents/AGENTS.md` |
+| browseros-neo | [BrowserOS neo](https://browseros.com)（给 agent 用的 Chromium 浏览器）：pacman `fuse2`，下载上游 `https://cdn.browseros.com/download/BrowserOS_neo.AppImage` 到 `~/.local/share/browseros-neo/`（每次下载、内容变了才算变更），并写入启动器的 `.desktop`；`claude mcp add --scope user --transport http browseros-neo http://127.0.0.1:9200/mcp`（已有则不动）；再装上游的 `browseros-neo` skill。不开机自启（依赖 claude-code、nodejs） |
 | ponytail | 给所有 agent 安装 [ponytail](https://github.com/DietrichGebert/ponytail) 插件：Claude Code / Codex / OpenCode / pi / oh-my-pi / Hermes 各用其原生安装方式 |
 | paseo | agent 多路复用：mise `npm:@getpaseo/cli`（CLI + daemon）；daemon 由本 role 管理的 systemd user unit `paseo-daemon.service`（`paseo daemon run`）常驻；开启 relay（配对仍需手动 `paseo daemon pair`），打开 `pluginsEnabled` 并安装插件 `npm:@oliexe/paseo-bots`；daemon 没在运行时在 play 末尾报错；tag `agent-multiplexer`（依赖 claude-code、codex） |
 | ghostty | 终端模拟器：`omarchy-install-terminal ghostty`，同时把它设为 Omarchy 的默认终端（取代 foot） |

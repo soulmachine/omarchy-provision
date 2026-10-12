@@ -1,0 +1,27 @@
+---
+browseros_neo_home: "{{ lookup('env', 'HOME') }}"
+
+# Upstream's stable alias for the newest Linux AppImage. The docs still say "no Linux build yet",
+# but the CDN serves it (DECISIONS Q20).
+browseros_neo_appimage_url: https://cdn.browseros.com/download/BrowserOS_neo.AppImage
+browseros_neo_appimage: "{{ browseros_neo_home }}/.local/share/browseros-neo/BrowserOS_neo.AppImage"
+
+# The endpoint neo's claw-server listens on (DEFAULT_SERVER_PORT 9200 in
+# apps/claw-server/src/config.rs). The name matches what neo's own "Connect" button writes into
+# ~/.claude.json, so the two never produce a second entry.
+browseros_neo_mcp_name: browseros-neo
+browseros_neo_mcp_url: http://127.0.0.1:9200/mcp
+
+# https://github.com/browseros-ai/BrowserOS/tree/main/skills/browseros-neo. Only this one skill:
+# the source also ships BrowserOS's internal development skills.
+browseros_neo_skill: browseros-neo
+browseros_neo_skill_source: browseros-ai/browseros
+browseros_neo_skill_dir: "{{ browseros_neo_home }}/.agents/skills/{{ browseros_neo_skill }}"
+
+# Same list as `skills_agents` in roles/skills/vars/main.yml, where the full reasoning is.
+# `universal` IS the store (~/.agents/skills) and is reached only by being named.
+browseros_neo_skill_agents:
+  - universal
+  - claude-code
+  - pi
+  - hermes-agent

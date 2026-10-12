@@ -192,3 +192,13 @@
 **Justification:** Precedent macbook-provision Q222 (`1password`): a macOS-only role is not ported, and the sibling repos list it among the roles they leave out.
 **Outcome:** applied
 **Ref:** (this commit); macbook-provision Q229, ubuntu-provision Q33
+
+## Q20 — interactive/browseros-neo — gate-resolution
+
+**Question:** Upstream macbook-provision Q237 adds `browseros-neo`, and Frank wants it on mac-mini-2018-omarchy. Upstream's docs say neo has no Linux build yet. Which artifact does the role install, and what upgrades it?
+**Options considered:** upstream's undocumented AppImage on the CDN / AUR `browseros-neo-bin` / the `.deb` unpacked by hand
+**Chosen:** The AppImage at `https://cdn.browseros.com/download/BrowserOS_neo.AppImage`, fetched by `get_url` with `force: true` into `~/.local/share/browseros-neo/`, plus pacman `fuse2` and a launcher `.desktop` file. The MCP entry and skill steps are upstream's.
+**Decided-by:** agent
+**Justification:** On 2026-10-12, the AUR package was one maintainer's, had 0 votes and was a release behind (0.50.5 against 0.51.0). The AppImage is upstream's own build. `omarchy-update` upgrades only pacman, AUR and mise packages, so this role's re-download is the upgrade path. That departs from "a tool role adds its tool when missing and nothing else" (docs/writing-roles.md), and it costs 218 MB a run. get_url reports changed only when the bytes differ.
+**Outcome:** applied
+**Ref:** (this commit); macbook-provision Q237, ubuntu-provision Q34
