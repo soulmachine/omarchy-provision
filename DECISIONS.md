@@ -255,3 +255,13 @@
 **Outcome:** applied
 **Ref:** (this commit); macbook-provision Q244
 **Supersedes:** Q22 — only its "install only" part
+
+## Q26 — interactive/orca — deviation
+
+**Question:** Upstream macbook-provision Q243 adds an `orca` role: the desktop app on MacBooks, plus the server from upstream's `orca serve service install` on always-on Macs. Frank named the AUR package `stably-orca-bin` for Arch. Q10 removed every AUR package. Where does Orca come from here, and which hosts run the server?
+**Options considered:** AUR `stably-orca-bin` / the AppImage from the GitHub release; the server on every host / none
+**Chosen:** AUR `stably-orca-bin`, installed with `yay -S --needed --noconfirm` behind a `pacman -Q` probe, and the server on every host through `/opt/stably-orca/resources/bin/orca-ide serve service install --port 6768 --command <same path>`. As upstream does, the role skips the server with a message while the installed Orca predates `serve service`. docs/writing-roles.md and README now name the package.
+**Decided-by:** human (the AUR package, the server on always-on hosts, and waiting for the upstream installer: Frank, 2026-10-12); agent (the CLI path)
+**Justification:** Frank's request names the AUR command, which overrides Q10's "no AUR package" for this one package. docs/writing-roles.md already gave the shape for one. Every Omarchy host is always-on. `omarchy-update -y` (Q2) upgrades AUR packages, so the role needs no upgrade step. The package installs no `orca-ide` on PATH, so the role pins the CLI's path inside the app tree, which stays the same across upgrades. Linger was already on for the host (checked 2026-10-12), so the role adds no linger task.
+**Outcome:** applied
+**Ref:** (this commit); macbook-provision Q243
