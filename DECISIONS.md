@@ -265,3 +265,14 @@
 **Justification:** Frank's request names the AUR command, which overrides Q10's "no AUR package" for this one package. docs/writing-roles.md already gave the shape for one. Every Omarchy host is always-on. `omarchy-update -y` (Q2) upgrades AUR packages, so the role needs no upgrade step. The package installs no `orca-ide` on PATH, so the role pins the CLI's path inside the app tree, which stays the same across upgrades. Linger was already on for the host (checked 2026-10-12), so the role adds no linger task.
 **Outcome:** applied
 **Ref:** (this commit); macbook-provision Q243
+
+## Q27 — interactive/1password — deviation
+
+**Question:** Frank asked for the `1password` role here too (upstream Q245 drops its `~/personal-agent` gate): the desktop app, the `op` CLI and the Claude Code plugin. Which install layer?
+**Options considered:** AUR `1password` / pacman from Omarchy's `omarchy` repo / `omarchy-install-service-1password`
+**Chosen:** pacman `1password-cli` on every host, and Omarchy's `omarchy-install-service-1password` for the app when a desktop session exists and `pacman -Q 1password` fails. The installer also adds 1Password's Chromium extension. The plugin steps are upstream's, unchanged.
+**Decided-by:** human (every host, plugin too, skip the app when headless: Frank, 2026-10-13); agent (the layer)
+**Justification:** docs/writing-roles.md puts an Omarchy installer ahead of a bare package. Both packages are in Omarchy's own repo, so `omarchy-update` upgrades them (Q2) and no AUR build is needed. mac-mini-2018-omarchy already had both from the Omarchy install, so the installer path is untested there.
+**Outcome:** applied
+**Ref:** (this commit); macbook-provision Q220, Q245
+**Supersedes:** the README line that listed `1password` among the roles not ported (upstream Q222)
