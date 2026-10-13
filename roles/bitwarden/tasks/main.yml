@@ -1,8 +1,9 @@
 ---
 # Bitwarden clients for Frank's Vaultwarden (~/coding-agent/docs/vaultwarden.md): `rbw` and the
 # official Electron desktop app from Arch's `extra`, the desktop app skipped on a headless host,
-# and the official `bw` CLI through mise. `omarchy-update` upgrades them (Q2). Install only: the
-# server URL, email and login are set by hand (upstream Q242).
+# and the official `bw` CLI through mise. `omarchy-update` upgrades them (Q2). `bw` and `rbw` are
+# then pointed at the server (upstream Q244, DECISIONS Q25); the desktop app's server and every
+# login stay manual.
 - name: Install rbw
   become: true
   community.general.pacman:
@@ -39,3 +40,6 @@
   ansible.builtin.debug:
     msg: Skipping the Bitwarden desktop app, because this host has no X11 or Wayland session.
   when: bitwarden_sessions.matched == 0
+
+- name: Point bw and rbw at Vaultwarden
+  ansible.builtin.include_tasks: config.yml

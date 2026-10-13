@@ -244,3 +244,14 @@
 **Justification:** The connector CLIs drive macOS apps. Ego Lite ships no Linux build: its skill's `scripts/install.sh` downloads only macOS DMGs, and lite.ego.app offers only macOS and Windows (checked 2026-10-12). Precedent Q19 (`removemacai`). ubuntu-provision records the same calls as Q38 and Q39.
 **Outcome:** applied
 **Ref:** (this commit); macbook-provision Q236, Q239, Q241
+
+## Q25 — interactive/bitwarden — deviation
+
+**Question:** Upstream macbook-provision Q244 has the `bitwarden` role point `bw` and `rbw` at Vaultwarden, except on archs-mac-mini. Port it?
+**Options considered:** port it as is / keep install-only
+**Chosen:** Ported: the same `tasks/config.yml` (read, write only when different, report a `bw` that is logged in to another server) and the same URL and email vars. No host gate: archs-mac-mini, the one host with its own Vaultwarden, is a Mac.
+**Decided-by:** human (configure every host except archs-mac-mini: Frank, 2026-10-12); agent (the port)
+**Justification:** `bw config server` and `rbw config` behave the same on Linux. Frank already had both set by hand on this repo's hosts, so the role keeps that across a rebuild.
+**Outcome:** applied
+**Ref:** (this commit); macbook-provision Q244
+**Supersedes:** Q22 — only its "install only" part
