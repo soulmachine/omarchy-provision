@@ -63,6 +63,7 @@
       tags: [terminal-multiplexer]
     - role: herdr
       tags: [terminal-multiplexer]
+    - eza
     - always-on
 
   # Failures that should be loud without being obstructive land here, after every role has

@@ -145,6 +145,7 @@ pre-commit run --all-files
 | zellij | 终端复用器（pacman）；tag `terminal-multiplexer` |
 | tmux | 终端复用器（pacman）；tag `terminal-multiplexer`（`pacman` role 的基础包里也有，重复无害） |
 | herdr | Omarchy 自带的 pacman 包，本 role 确认它在，用 herdrui.dev 安装脚本装 Herdr UI（herdr 的原生 GUI 客户端），装 herdr skill、在 `~/.bashrc` 加终端标题函数，并用 herdr-rename-hook skill 的 `install.sh` 接上 `/rename` 钩子（Claude Code 与 Codex 的 `/rename` 同步成 Herdr 的 agent、pane 和 tab 名）；tag `terminal-multiplexer` |
+| eza | 在 `~/.bashrc` 末尾（Omarchy rc 之后）重定义 `ls`、`lt`：没给路径时补 `.`。否则 eza 在非 tty 的 stdin 上会读 stdin 里的文件名，agent 的 shell 卡住或什么都不列。辅助函数叫 `eza_ls`，不以 `_` 开头，因为 Claude Code 的 shell 快照会丢掉 `_` 开头的函数 |
 | always-on | 常驻服务器配置：屏蔽五个 sleep target、在 Omarchy 菜单隐藏 Suspend、SDDM 自动重登（`/etc/sddm.conf.d/zz-relogin.conf`）、`/etc/sysctl.d/zz-always-on.conf`、移除旧的每周日 `omarchy-weekly-update` 重启检查（重启改由 `pacman` role 负责）、屏保延迟 86400 秒、sudoers 的 `verifypw=any` |
 
 ### 不移植的内容
