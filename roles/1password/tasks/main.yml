@@ -4,6 +4,8 @@
 # repo, so `omarchy-update` upgrades them (Q2); the app is skipped on a headless host. Two
 # switches stay manual, in the app under Settings → Developer: "Integrate with 1Password CLI" for
 # `op`, and "Integrate with MCP clients" for the server the plugin launches. Signing in is manual too.
+# Headless `op` comes from OP_SERVICE_ACCOUNT_TOKEN in .env (dotenv role), read-only on the
+# Automation vault; see ~/.agents/docs/1password.md.
 - name: Install the 1Password CLI
   become: true
   community.general.pacman:
