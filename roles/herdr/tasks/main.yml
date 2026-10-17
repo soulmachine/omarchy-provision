@@ -8,14 +8,6 @@
     name: herdr
     state: present
 
-# Herdr UI (https://herdrui.dev), a native GUI client for the herdr daemon above. Upstream's
-# script verifies the release's package and installs it with sudo pacman -U, which puts the
-# binary at /usr/bin/herdr-gpui. Later updates come from the app's App Updates panel.
-- name: Install Herdr UI # noqa: command-instead-of-module risky-shell-pipe
-  ansible.builtin.shell: curl -fsSL https://herdrui.dev/install.sh | sh
-  args:
-    creates: /usr/bin/herdr-gpui
-
 # Multi-line, so blockinfile rather than the lineinfile used for one-line aliases elsewhere.
 # The named marker keeps this block from colliding with any other role's block in .bashrc.
 - name: Add the herdr terminal-title wrapper to .bashrc
