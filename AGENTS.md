@@ -37,4 +37,4 @@ ssh -o BatchMode=yes -o ConnectTimeout=15 <host> \
 |---|---|
 | add a role, or write or change any role's tasks | [docs/writing-roles.md](docs/writing-roles.md) |
 | touch `.env`, a secret, `GITHUB_TOKEN`, `TYPESAFE_API_KEY`, or the `dotenv` role | [docs/secrets.md](docs/secrets.md) |
-| change agent-reach, paseo, ponytail, tailscale or typesafe | that role's `roles/<name>/README.md`, where one exists |
+| change agent-reach, context-mode, paseo, ponytail, tailscale or typesafe | that role's `roles/<name>/README.md`, where one exists |

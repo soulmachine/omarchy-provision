@@ -296,3 +296,13 @@
 **Justification:** open-pstack is on every host, Linux ones included, and the user wants it gone everywhere. Delete the retire tasks once every host is clean.
 **Outcome:** applied
 **Ref:** (this commit); macbook-provision Q247
+
+## Q30 — interactive/context-mode — gate-resolution
+
+**Question:** Port the macOS context-mode role, and how should the `context-mode` CLI be installed on Omarchy?
+**Options considered:** an npm global as on macOS / an Omarchy mise tool (`npm:context-mode` with a ~/.local/bin stub)
+**Chosen:** Ported with the mise tool, the way this repo installs every other npm CLI (`mise/tasks/tool.yml`). The agents are Claude Code, Codex, OpenCode, pi, oh-my-pi, Gemini CLI, Copilot CLI and OpenClaw. There is no kimi-code half, because Omarchy does not install kimi-code (Q10). Hermes, Crush and Grok are skipped.
+**Decided-by:** agent
+**Justification:** The user asked for context-mode in all three provision repos, each agent through its own installer. This repo has no npm_global helper, and its other npm CLIs are mise tools. The reasons for the per-agent calls are in macbook-provision Q248–Q251.
+**Outcome:** applied
+**Ref:** (this commit); macbook-provision Q248–Q251

@@ -1,0 +1,14 @@
+---
+dependencies:
+  # The `context-mode` CLI, which every hook runs, is a mise tool on mise's Node.
+  - nodejs
+  # context-mode is installed *into* each of these, through that agent's own installer, so the
+  # agent must be provisioned first.
+  - claude-code
+  - codex
+  - opencode
+  - pi
+  - omp
+  - gemini
+  - copilot
+  - openclaw
