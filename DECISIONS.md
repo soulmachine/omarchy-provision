@@ -316,3 +316,13 @@
 **Justification:** Same call as macbook-provision Q252. On this repo's hosts OpenClaw 2026.10.5 refused the install without `--accept-capabilities` (dev-server-frank, 2026-10-18).
 **Outcome:** applied
 **Ref:** (this commit); macbook-provision Q252
+
+## Q32 — interactive/context-mode — irreversible-action
+
+**Question:** Trust context-mode's six Codex hooks on this repo's host?
+**Options considered:** leave it to the per-host `/hooks` step / trust them headlessly
+**Chosen:** Trusted headlessly on mac-mini-2018-omarchy, where the plugin is installed.
+**Decided-by:** agent
+**Justification:** The user asked for it. Same review, method and revert path as macbook-provision Q253; its hashes matched mac-mini-m6's.
+**Outcome:** applied
+**Ref:** (this commit); macbook-provision Q253
