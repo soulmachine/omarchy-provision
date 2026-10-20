@@ -121,8 +121,8 @@ pre-commit run --all-files
 | pi | pi coding agent（Omarchy 的 mise 工具 `pi`），并下发 `~/.pi/agent/settings.json` |
 | copilot | GitHub Copilot CLI（Omarchy 的 mise 工具 `copilot`）；走网关用的 `copilot-gw` 由 m2 上的 `cliproxy-tier` 写入 |
 | crush | Crush（Charm，Omarchy 的 mise 工具 `crush`）；`~/.config/crush/crushrc` 里的网关 provider 由 `cliproxy-tier` 写入 |
-| gemini | Gemini CLI（Omarchy 的 mise 工具 `gemini`）；`gemini-gw` 与 `~/.gemini/settings.json` 由 `cliproxy-tier` 写入（依赖 nodejs） |
-| grok | Grok CLI（Omarchy 的 mise 工具 `npm:@xai-official/grok`）；`~/.grok/config.toml` 里的网关模型由 `cliproxy-tier` 写入（依赖 nodejs） |
+| gemini | Gemini CLI（Omarchy 的 mise 工具 `gemini`）；`gemini-gw` 及其网关配置（`~/.gemini-gw`）由 `cliproxy-tier` 写入，`gemini` 本身保持原生（依赖 nodejs） |
+| grok | Grok CLI（Omarchy 的 mise 工具 `npm:@xai-official/grok`）；`grok-gw` 及其网关配置（`~/.grok-gw`）由 `cliproxy-tier` 写入，`grok` 本身保持原生（依赖 nodejs） |
 | openclaw | OpenClaw：`omarchy-install-openclaw-cli`（pacman `openclaw`）；onboarding 由 m2 上的 `cliproxy-tier` 负责，未 onboarding 时只打印提示；daemon 跑的 Node 或 OpenClaw 版本过期时用 `openclaw gateway install --force` 重写并重启 |
 | agent-sync | GitHub release 的二进制放到 `~/.local/bin/agent-sync`（AUR 只有过期的 0.1.0）；把 `~/.agents/` 扇出到各 agent；并托管每晚 02:17 的 `agent-sync sync` cron |
 | skills | 用 `npx skills@latest add` 安装整源与只取指定技能的源，并扇出到各 agent 的 skills 目录；详见下文「Agent CLI 与技能」（依赖 claude-code、codex） |
@@ -216,7 +216,7 @@ Omarchy 支持的 agent 里，**Cursor CLI 和 Muse Code 不装**：前者的模
 
 - **Codex 的 hook 信任**是一次性的、每台机器各做一次：跑 `codex`、打开 `/hooks`，审核并信任 ponytail 的三个生命周期 hook，然后开一个新 thread。
 - **opencode 的 provider 认证**没有做：安装器带的是 `--skip-auth`。
-- **新装的 agent 要在 m2 上跑一次 `cliproxy-tier <host>`。** `copilot-gw`、`gemini-gw`、grok、crush、openclaw 的网关配置以及 OpenClaw 的 onboarding 都由它完成，而它只处理已经装好的 agent。
+- **新装的 agent 要在 m2 上跑一次 `cliproxy-tier <host>`。** `copilot-gw`、`gemini-gw`、`grok-gw`、`kimi-gw`、crush、openclaw 的网关配置以及 OpenClaw 的 onboarding 都由它完成，而它只处理已经装好的 agent。
 - **rename 钩子装上或更新后**，Codex 下次启动会问是否信任这个钩子，选「Trust all and continue」；已经在跑的 Claude Code 会话要打开一次 `/hooks` 或重启才会用上。
 - **agent-reach 只配好了零配置的渠道。** 其余渠道要 cookie 或点一下浏览器扩展。要补齐就自己交互式跑一次 `agent-reach doctor`。
 - **`claude-mem` 的模型 id 要手工升级。** `roles/claude-mem/vars/main.yml` 里的 `claude_mem_model` 只认完整 id，id 一旦下架就是一个硬错误 `Fatal error: Unknown Claude model`，**会让 play 失败**。
