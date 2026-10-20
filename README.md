@@ -178,7 +178,7 @@ macbook-provision 里没有移植的 role：`host-facts`、`shell`、`omarchy`�
 | copilot | mise `copilot`（aqua） | stub `~/.local/bin/copilot` |
 | crush | mise `crush`（aqua） | stub `~/.local/bin/crush` |
 | gemini | mise `gemini`（npm） | stub `~/.local/bin/gemini` |
-| grok | mise `npm:@xai-official/grok` | stub `~/.local/bin/grok`；首次运行时原生二进制下载到 `~/.grok/bin` |
+| grok | mise `npm:@xai-official/grok` | stub `~/.local/bin/grok`；首次运行时原生二进制下载到 `~/.grok/bin`；经网关用 `grok-gw` |
 | openclaw | `omarchy-install-openclaw-cli`（pacman `openclaw`） | `/usr/bin/openclaw` |
 | hermes | `omarchy-install-hermes-cli`（mise pipx） | `~/.local/bin/hermes` |
 | claude-mem | `npx -y claude-mem install` | 不是独立命令，而是 Claude Code 插件，同时接线 codex-cli 和 opencode |
