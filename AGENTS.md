@@ -27,9 +27,10 @@ ssh -o BatchMode=yes -o ConnectTimeout=15 <host> \
   updater. The `mise` role's `mise up` is the only other upgrade call, for single-role runs.
 - **Self-update tasks: diff state, don't grep output.** A task that runs an installer measures a
   version, ledger or `mise ls --json` before and after, and sets `changed_when` on the difference.
-- **The gateway files are read-only here.** `~/.local/bin/*-gw`, `/usr/bin/omarchy-agent` and the
-  agents' gateway settings belong to `cliproxy-tier-host.py` in macbook-provision, run from
-  mac-mini-m2. A role that needs `claude-gw` fails when it is missing, and never writes it.
+- **The gateway files are read-only here.** `~/.local/bin/*-gw` and the agents' gateway settings
+  belong to `cliproxy-tier-host.py` in macbook-provision, run from mac-mini-m2. A role that needs
+  `claude-gw` fails when it is missing, and never writes it. The Omarchy patches, the launcher's
+  included, belong to the `omarchy-cliproxy` role.
 
 ## Read before you act
 

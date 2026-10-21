@@ -147,14 +147,14 @@ pre-commit run --all-files
 | tmux | 终端复用器（pacman）；tag `terminal-multiplexer`（`pacman` role 的基础包里也有，重复无害） |
 | herdr | Omarchy 自带的 pacman 包，本 role 只确认它在、装 herdr skill、在 `~/.bashrc` 加终端标题函数，并用 herdr-rename-hook skill 的 `install.sh` 接上 `/rename` 钩子（Claude Code 与 Codex 的 `/rename` 同步成 Herdr 的 agent、pane 和 tab 名）；tag `terminal-multiplexer` |
 | eza | 在 `~/.bashrc` 末尾（Omarchy rc 之后）重定义 `ls`、`lt`：没给路径时补 `.`。否则 eza 在非 tty 的 stdin 上会读 stdin 里的文件名，agent 的 shell 卡住或什么都不列。辅助函数叫 `eza_ls`，不以 `_` 开头，因为 Claude Code 的 shell 快照会丢掉 `_` 开头的函数 |
+| omarchy-cliproxy | 只在网关主机（有 m2 写入的 `~/.local/bin/claude-gw`、没有原生 Claude 登录）上运行：装三个 Omarchy 补丁（`omarchy-agent` 启动器改走 `-gw` 包装器；Agents bar 的 Claude、Codex 用量采集器读网关的用量文件）、打补丁脚本 `/usr/local/bin/omarchy-cliproxy-patch` 和 pacman hook（Omarchy 升级后重新打补丁；补丁打不上时在 play 末尾报错）；再装 systemd user timer `omarchy-cliproxy-usage.timer`，每 5 分钟 ssh 到 mac-mini-m2，从 stdin 运行 `cliproxy-usage-probe`，m2 只返回用量结果、不返回 token，写入 `~/.local/state/cliproxy/{claude,codex}-usage.json` 并刷新 Agents bar |
 | always-on | 常驻服务器配置：屏蔽五个 sleep target、在 Omarchy 菜单隐藏 Suspend、SDDM 自动重登（`/etc/sddm.conf.d/zz-relogin.conf`）、`/etc/sysctl.d/zz-always-on.conf`、移除旧的每周日 `omarchy-weekly-update` 重启检查（重启改由 `pacman` role 负责）、屏保延迟 86400 秒、sudoers 的 `verifypw=any` |
 
 ### 不移植的内容
 
 这些东西留在 mac-mini-2018-omarchy 上手工维护，记录在 `~/.agents/docs/fleet-ssh.md`，因为它们属于这一台机器而不是每台 Omarchy 主机：
 
-- **CLIProxyAPI 的 agent 用量条补丁**（`gateway/omarchy/` 仍在 macbook-provision 里，由 pacman hook 在 Omarchy 升级后重新打上）。
-- **`~/.local/bin/*-gw` 包装器**、各 agent 的网关 settings 和 `/usr/bin/omarchy-agent` 的补丁：由 mac-mini-m2 上的 `cliproxy-tier-host.py` 写入。本仓库**从不**写这些文件。
+- **`~/.local/bin/*-gw` 包装器**和各 agent 的网关 settings：由 mac-mini-m2 上的 `cliproxy-tier-host.py` 写入。本仓库**从不**写这些文件。`/usr/bin/omarchy-agent` 的补丁归 `omarchy-cliproxy` role。
 - **arch-mact2** 的 pre-refresh hook（只有 T2 硬件需要）。
 - **Sunshine**：Omarchy 的安装器有 bug，unit、web app 和 ufw 规则是手工做的一次性工作。
 

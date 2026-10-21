@@ -65,6 +65,7 @@
     - role: herdr
       tags: [terminal-multiplexer]
     - eza
+    - omarchy-cliproxy
     - always-on
 
   # Failures that should be loud without being obstructive land here, after every role has
@@ -113,6 +114,13 @@
         msg: "{{ paseo_daemon_down }}"
       when: paseo_daemon_down is defined
       tags: [agent-multiplexer]
+
+    - name: Fail when an Omarchy CLIProxyAPI patch no longer applies
+      ansible.builtin.fail:
+        msg: >-
+          {{ omarchy_cliproxy_patch_failed }}
+          Rebase the patch in roles/omarchy-cliproxy/files/ against the new Omarchy file.
+      when: omarchy_cliproxy_patch_failed is defined
 
     - name: Fail when the Orca server is not live
       ansible.builtin.fail:

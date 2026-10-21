@@ -346,3 +346,23 @@
 **Justification:** Pi's `dist/core/model-resolver.js` (step 2, "saved default") uses the saved default only when both `defaultProvider` and `defaultModel` are set, and it looks the model up by bare id. A `pi -p --mode json` run afterwards answered from `cliproxy`/`deepseek-v4.1-flash`, with a thinking block. So the earlier `cliproxy/claude-opus-5-5` value probably never took effect either. `cliproxy-assert-pi` and `cliproxy-tier-host.py` still write and check the combined form, so the hourly re-assert would set an id Pi cannot resolve.
 **Outcome:** applied
 **Ref:** (pending)
+
+## Q35 — interactive/agent-usage-move — deviation
+
+**Question:** The Agents bar's rate-limit feed and the Omarchy patches lived in macbook-provision's `gateway/`, put on mac-mini-2018-omarchy by hand, with m2 pushing over ssh every 5 minutes. Where should they live, and which way should the data flow?
+**Options considered:** a new omarchy-provision role where the Omarchy host pulls from m2 / move only the files and keep m2's LaunchAgent pushing from an omarchy-provision clone on m2
+**Chosen:** New role `omarchy-cliproxy`. It installs the three patches (launcher, Claude and Codex collectors), the installer, the pacman hook, the probe and a systemd user timer. Every 5 minutes the timer runs the probe on mac-mini-m2 over ssh from stdin. m2 prints only the usage answers, and the host writes them to `~/.local/state/cliproxy/`. m2's LaunchAgent and the macbook-provision copies are removed.
+**Decided-by:** human (pull, and move all of `gateway/omarchy/`), agent (role shape)
+**Justification:** Only the Agents bar reads these files, and only Omarchy has that bar, so the Omarchy repo owns them. Tokens stay on m2, because m2 runs the probe and returns only the answers. Agent-less `ssh mac-mini-m2` works from the host, and `Linger=yes` lets a user timer run without a login.
+**Outcome:** applied
+**Ref:** (pending)
+
+## Q36 — interactive/agent-usage-move — gate-resolution
+
+**Question:** Which Omarchy hosts get the role?
+**Options considered:** every Omarchy host / only gateway-only hosts
+**Chosen:** Only hosts where `~/.local/bin/claude-gw` exists and `~/.claude/.credentials.json` does not. Other hosts skip the role.
+**Decided-by:** agent
+**Justification:** The launcher patch sends agents to the `-gw` wrappers, and the pushed limits are for hosts with no vendor login. A host with a native Claude login has its own limits and needs neither. `cliproxy-tier-host.py` writes `claude-gw`, so the gate follows the gateway's own record.
+**Outcome:** assumed
+**Ref:** (pending)

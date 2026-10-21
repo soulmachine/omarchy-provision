@@ -1,0 +1,19 @@
+#!/bin/bash
+# Fetch this host's Claude and Codex rate limits for Omarchy's Agents bar. The
+# vendor tokens live on mac-mini-m2 only, so m2 runs cliproxy-usage-probe from
+# stdin and prints just the answers. omarchy-cliproxy-usage.timer runs this.
+set -uo pipefail
+umask 077
+d=~/.local/state/cliproxy
+mkdir -p "$d"
+ssh -o BatchMode=yes -o ConnectTimeout=10 mac-mini-m2 /usr/bin/python3 - "$(hostname)" \
+  <~/.local/share/omarchy-cliproxy/cliproxy-usage-probe |
+  while IFS= read -r name && IFS= read -r body; do
+    # m2 picks the file names; keep them to the two the collectors read.
+    case $name in claude-usage.json | codex-usage.json) ;; *) continue ;; esac
+    printf '%s\n' "$body" >"$d/.$name.tmp" && mv "$d/.$name.tmp" "$d/$name"
+  done
+status=$?
+u=/usr/share/omarchy/bin/omarchy-agent-usage-update
+if [ -x "$u" ]; then OMARCHY_PATH=/usr/share/omarchy "$u" --limits-only claude codex >/dev/null 2>&1 || true; fi
+exit $status

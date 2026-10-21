@@ -1,0 +1,91 @@
+---
+# Omarchy's side of CLIProxyAPI on a gateway-only host (DECISIONS Q35, Q36): local patches
+# that send the agent launcher through the -gw wrappers and let the Agents bar's Claude and
+# Codex collectors read limits fetched from mac-mini-m2, plus the timer that fetches them.
+# A host with a native Claude login, or without the gateway's claude-gw, skips all of it.
+- name: Check for the gateway's claude-gw
+  ansible.builtin.stat:
+    path: "{{ lookup('env', 'HOME') }}/.local/bin/claude-gw"
+  register: omarchy_cliproxy_gw
+
+- name: Check for a native Claude login
+  ansible.builtin.stat:
+    path: "{{ lookup('env', 'HOME') }}/.claude/.credentials.json"
+  register: omarchy_cliproxy_login
+
+- name: Install the CLIProxyAPI patches and the Agents bar feed
+  when: omarchy_cliproxy_gw.stat.exists and not omarchy_cliproxy_login.stat.exists
+  block:
+    - name: Install the Omarchy patches
+      become: true
+      ansible.builtin.copy:
+        src: "{{ item }}"
+        dest: /usr/local/share/omarchy-cliproxy/
+        mode: "0644"
+      loop:
+        - omarchy-agent.patch
+        - omarchy-agent-usage-claude.patch
+        - omarchy-agent-usage-codex.patch
+
+    - name: Install the patch script
+      become: true
+      ansible.builtin.copy:
+        src: omarchy-cliproxy-patch
+        dest: /usr/local/bin/omarchy-cliproxy-patch
+        mode: "0755"
+
+    # Re-applies the patches each time the omarchy package rewrites a patched file.
+    - name: Install the pacman hook
+      become: true
+      ansible.builtin.copy:
+        src: 95-omarchy-cliproxy-usage.hook
+        dest: /etc/pacman.d/hooks/95-omarchy-cliproxy-usage.hook
+        mode: "0644"
+
+    # The script is ours: it prints "patched <file>" only when it changed one, and exits 1
+    # when a patch no longer applies, which leaves that file stock. That is reported at the
+    # end of the play, not here.
+    - name: Apply the Omarchy patches
+      become: true
+      ansible.builtin.command: /usr/local/bin/omarchy-cliproxy-patch
+      register: omarchy_cliproxy_patch
+      changed_when: "'omarchy-cliproxy: patched' in omarchy_cliproxy_patch.stdout"
+      failed_when: omarchy_cliproxy_patch.rc not in [0, 1]
+
+    - name: Record a patch that no longer applies
+      ansible.builtin.set_fact:
+        omarchy_cliproxy_patch_failed: "{{ omarchy_cliproxy_patch.stderr }}"
+      when: omarchy_cliproxy_patch.rc | default(0) == 1
+
+    - name: Install the usage probe that m2 runs
+      ansible.builtin.copy:
+        src: cliproxy-usage-probe
+        dest: "{{ lookup('env', 'HOME') }}/.local/share/omarchy-cliproxy/"
+        mode: "0644"
+
+    - name: Install the usage fetch script
+      ansible.builtin.copy:
+        src: omarchy-cliproxy-usage
+        dest: "{{ lookup('env', 'HOME') }}/.local/bin/omarchy-cliproxy-usage"
+        mode: "0755"
+
+    - name: Install the usage fetch units
+      ansible.builtin.copy:
+        src: "{{ item }}"
+        dest: "{{ lookup('env', 'HOME') }}/.config/systemd/user/{{ item }}"
+        mode: "0644"
+      loop:
+        - omarchy-cliproxy-usage.service
+        - omarchy-cliproxy-usage.timer
+      register: omarchy_cliproxy_units
+
+    # Skipped under --check on a host where the units were not written yet: systemd cannot
+    # report on a unit that does not exist.
+    - name: Run the usage fetch timer
+      ansible.builtin.systemd_service:
+        name: omarchy-cliproxy-usage.timer
+        scope: user
+        daemon_reload: true
+        enabled: true
+        state: started
+      when: not (ansible_check_mode and omarchy_cliproxy_units is changed)

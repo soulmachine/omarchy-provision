@@ -1,0 +1,6 @@
+[Unit]
+Description=Fetch Claude and Codex rate limits from mac-mini-m2 for the Agents bar
+
+[Service]
+Type=oneshot
+ExecStart=%h/.local/bin/omarchy-cliproxy-usage
