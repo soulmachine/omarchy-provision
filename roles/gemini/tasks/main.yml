@@ -2,7 +2,7 @@
 # Gemini CLI is Omarchy's mise tool (npm `@google/gemini-cli`) with its ~/.local/bin/gemini
 # stub; the mise role's `mise up` keeps it current. Plain `gemini` stays native.
 # `gemini-gw`, which Omarchy's patched launcher starts, and its gateway home ~/.gemini-gw come
-# from `cliproxy-tier <host>` on mac-mini-m2 (macbook-provision docs/gateway-policy.md).
+# from `cliproxy-tier <host>` on mac-mini-m2 (~/coding-agent/devops/cliproxyapi/gateway-policy.md).
 - name: Ensure Gemini CLI is installed through mise
   ansible.builtin.include_role:
     name: mise

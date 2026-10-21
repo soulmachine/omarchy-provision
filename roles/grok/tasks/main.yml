@@ -3,7 +3,7 @@
 # stub; the mise role's `mise up` keeps it current. The npm package is a launcher: the first
 # `grok` call downloads the native binary into ~/.grok/bin. Plain `grok` stays native.
 # `grok-gw` and its gateway home ~/.grok-gw come from `cliproxy-tier <host>` on mac-mini-m2
-# (macbook-provision docs/gateway-policy.md).
+# (~/coding-agent/devops/cliproxyapi/gateway-policy.md).
 - name: Ensure Grok CLI is installed through mise
   ansible.builtin.include_role:
     name: mise
