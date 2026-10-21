@@ -124,6 +124,7 @@ pre-commit run --all-files
 | gemini | Gemini CLI（Omarchy 的 mise 工具 `gemini`）；`gemini-gw` 及其网关配置（`~/.gemini-gw`）由 `cliproxy-tier` 写入，`gemini` 本身保持原生（依赖 nodejs） |
 | grok | Grok CLI（Omarchy 的 mise 工具 `npm:@xai-official/grok`）；`grok-gw` 及其网关配置（`~/.grok-gw`）由 `cliproxy-tier` 写入，`grok` 本身保持原生（依赖 nodejs） |
 | openclaw | OpenClaw：`omarchy-install-openclaw-cli`（pacman `openclaw`）；onboarding 由 m2 上的 `cliproxy-tier` 负责，未 onboarding 时只打印提示；daemon 跑的 Node 或 OpenClaw 版本过期时用 `openclaw gateway install --force` 重写并重启 |
+| dsh | DeepSeek Harness（mise 工具 `npm:@deepseek-ai/dsh`，另装 mise 工具 `pnpm`，因为 `dsh plugin` 靠 PATH 上的 pnpm 装插件）；按 `roles/dsh/vars/main.yml` 给 `web`、`tui` 两个 profile 补装缺的插件，再每次 `dsh plugin --profile <p> update --latest`，按 `pnpm-lock.yaml` 前后校验和判断变更（不到一天的新版本被 pnpm 的 minimumReleaseAge 挡住，下次再装）。dsh 拒绝的插件（如与当前 dsh 不兼容的 `dsh-find-plugin`）只打印警告，等兼容版本发布后自动装上 |
 | agent-sync | GitHub release 的二进制放到 `~/.local/bin/agent-sync`（AUR 只有过期的 0.1.0）；把 `~/.agents/` 扇出到各 agent；并托管每晚 02:17 的 `agent-sync sync` cron |
 | skills | 用 `npx skills@latest add` 安装整源与只取指定技能的源，并扇出到各 agent 的 skills 目录；详见下文「Agent CLI 与技能」（依赖 claude-code、codex） |
 | agent-reach | 多渠道触达工具；上游只提供面向 AI agent 的安装文档，故由 `claude-gw -p` 按文档驱动安装。`~/.local/bin/claude-gw` 由 mac-mini-m2 上的 `cliproxy-tier` 写入，缺失时 role 报错而**不自行创建**（依赖 claude-code、python） |
@@ -180,6 +181,7 @@ macbook-provision 里没有移植的 role：`host-facts`、`shell`、`omarchy`�
 | gemini | mise `gemini`（npm） | stub `~/.local/bin/gemini` |
 | grok | mise `npm:@xai-official/grok` | stub `~/.local/bin/grok`；首次运行时原生二进制下载到 `~/.grok/bin`；经网关用 `grok-gw` |
 | openclaw | `omarchy-install-openclaw-cli`（pacman `openclaw`） | `/usr/bin/openclaw` |
+| dsh | mise `npm:@deepseek-ai/dsh`（加 `pnpm`） | stub `~/.local/bin/dsh`；插件在 `~/.dsh/profiles/<profile>/` |
 | hermes | `omarchy-install-hermes-cli`（mise pipx） | `~/.local/bin/hermes` |
 | claude-mem | `npx -y claude-mem install` | 不是独立命令，而是 Claude Code 插件，同时接线 codex-cli 和 opencode |
 | agent-reach | **没有包管理器**，见下 | 由 `claude-gw -p` 按上游文档安装 |
