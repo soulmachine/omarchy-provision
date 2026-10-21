@@ -366,3 +366,14 @@
 **Justification:** The launcher patch sends agents to the `-gw` wrappers, and the pushed limits are for hosts with no vendor login. A host with a native Claude login has its own limits and needs neither. `cliproxy-tier-host.py` writes `claude-gw`, so the gate follows the gateway's own record.
 **Outcome:** assumed
 **Ref:** (pending)
+
+## Q37 — interactive/agent-usage-move — gate-resolution
+
+**Question:** Which Omarchy hosts get the `omarchy-cliproxy` role?
+**Options considered:** gateway-only hosts / gateway-only hosts whose Omarchy has the Agents bar
+**Chosen:** Gateway-only hosts (Q36's `claude-gw` present, no `~/.claude/.credentials.json`) whose Omarchy ships the Agents bar, which the role checks as `/usr/bin/omarchy-agent-usage-update`.
+**Decided-by:** human
+**Justification:** Frank confirmed Q36 and added the Agents bar condition. The bar is the only reader of the fetched limits, and the collector patches have no target without it.
+**Outcome:** applied
+**Ref:** (pending)
+**Supersedes:** Q36 — adds the Agents bar condition; the gateway condition stays.

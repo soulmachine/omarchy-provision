@@ -2,7 +2,8 @@
 # Omarchy's side of CLIProxyAPI on a gateway-only host (DECISIONS Q35, Q36): local patches
 # that send the agent launcher through the -gw wrappers and let the Agents bar's Claude and
 # Codex collectors read limits fetched from mac-mini-m2, plus the timer that fetches them.
-# A host with a native Claude login, or without the gateway's claude-gw, skips all of it.
+# Only an Omarchy version with the Agents bar, on a host that has the gateway's claude-gw and
+# no native Claude login, gets it.
 - name: Check for the gateway's claude-gw
   ansible.builtin.stat:
     path: "{{ lookup('env', 'HOME') }}/.local/bin/claude-gw"
@@ -13,8 +14,13 @@
     path: "{{ lookup('env', 'HOME') }}/.claude/.credentials.json"
   register: omarchy_cliproxy_login
 
+- name: Check for the Agents bar
+  ansible.builtin.stat:
+    path: /usr/bin/omarchy-agent-usage-update
+  register: omarchy_cliproxy_bar
+
 - name: Install the CLIProxyAPI patches and the Agents bar feed
-  when: omarchy_cliproxy_gw.stat.exists and not omarchy_cliproxy_login.stat.exists
+  when: omarchy_cliproxy_bar.stat.exists and omarchy_cliproxy_gw.stat.exists and not omarchy_cliproxy_login.stat.exists
   block:
     - name: Install the Omarchy patches
       become: true
