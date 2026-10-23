@@ -130,7 +130,7 @@ pre-commit run --all-files
 | agent-reach | 多渠道触达工具；上游只提供面向 AI agent 的安装文档，故由 `claude-gw -p` 按文档驱动安装。`~/.local/bin/claude-gw` 由 mac-mini-m2 上的 `cliproxy-tier` 写入，缺失时 role 报错而**不自行创建**（依赖 claude-code、python） |
 | playwright | 浏览器自动化：mise `npm:playwright`（依赖 nodejs） |
 | playwright-cli | Playwright CLI：mise `npm:@playwright/cli`，并安装其 skill（依赖 playwright） |
-| claude-mem | Claude 记忆插件；`npx -y claude-mem install` 为 claude-code / codex-cli / opencode 三者接线（依赖 nodejs、bun、uv） |
+| claude-mem | 移除用 role（2026-10-23 起）：跑 `npx -y claude-mem uninstall`，清掉它留在 Gemini、Codex、opencode 里的接线，删除 `~/.claude-mem`；所有主机跑过后删掉本 role（依赖 nodejs） |
 | hermes | Hermes 个人 agent（Nous Research）的 CLI 版：`omarchy-install-hermes-cli`（mise pipx）；`~/.hermes/SOUL.md` 链接到 `~/.agents/AGENTS.md` |
 | browseros-neo | [BrowserOS neo](https://browseros.com)（给 agent 用的 Chromium 浏览器）：pacman `fuse2`，下载上游 `https://cdn.browseros.com/download/BrowserOS_neo.AppImage` 到 `~/.local/share/browseros-neo/`（每次下载、内容变了才算变更），并写入启动器的 `.desktop`；把 MCP 端点 `http://127.0.0.1:9010/mcp`（neo 的 proxy 端口；文档里的 9200 不对）注册给每个已安装的 agent：Claude Code、codex、gemini、copilot、grok、hermes 用各自的 `mcp add`，kimi、omp、opencode、crush 合并进各自的 JSON 配置；URL 不对就替换（pi 不支持 MCP）；首次安装上游 `browseros-neo` skill，之后由运行中的 neo 自己更新。不开机自启（依赖 claude-code、nodejs） |
 | ponytail | 给所有 agent 安装 [ponytail](https://github.com/DietrichGebert/ponytail) 插件：Claude Code / Codex / OpenCode / pi / oh-my-pi / Hermes 各用其原生安装方式 |
@@ -183,7 +183,6 @@ macbook-provision 里没有移植的 role：`host-facts`、`shell`、`omarchy`�
 | openclaw | `omarchy-install-openclaw-cli`（pacman `openclaw`） | `/usr/bin/openclaw` |
 | dsh | mise `npm:@deepseek-ai/dsh`（加 `pnpm`） | stub `~/.local/bin/dsh`；插件在 `~/.dsh/profiles/<profile>/` |
 | hermes | `omarchy-install-hermes-cli`（mise pipx） | `~/.local/bin/hermes` |
-| claude-mem | `npx -y claude-mem install` | 不是独立命令，而是 Claude Code 插件，同时接线 codex-cli 和 opencode |
 | agent-reach | **没有包管理器**，见下 | 由 `claude-gw -p` 按上游文档安装 |
 
 stub 是 `omarchy-mise-install` 写的那种：先 `mise use -g`、再 `mise x`，第一次调用时装好工具。**升级统一由 `mise` role 的一次 `mise up` 完成**，各工具 role 没有自己的 update 步骤。
@@ -210,7 +209,6 @@ Omarchy 支持的 agent 里，**Cursor CLI 和 Muse Code 不装**：前者的模
 
 - **每个技能源都会报两个 per-agent 失败**（Eve 和 PromptScript 拒绝全局安装）。属于正常噪音。
 - **Hermes 拒绝安装 ponytail**，理由是插件扫描器给出 `dangerous` 判定（`--force` 也压不住）。role 把这一种失败明确放行并打印补救办法，其它任何错误仍然会让 play 失败。要接受这些发现，得自己在 `~/.hermes/config.yaml` 里设 `plugins.scan_on_install: false`，role 不替你做。
-- **claude-mem 每次都报 changed。** 它的安装器无论有没有实际动作都退出 0 并打印 "installed successfully"，所以 role 直接写死 `changed_when: true`。
 - 某个「只取几个技能」的源里的技能被上游改名或下架时，CLI 会退出 1 并打印 `● Available skills:` 加一整份清单，**读起来像帮助信息，其实是错误**。用 `npx skills@latest add <源> -l` 看上游现在有什么（`-l` 只列不装），然后改 `roles/skills/vars/main.yml`。这类失败**推迟到整个 play 的末尾**才抛出，但 PLAY RECAP 里依然是 `failed=1`。
 - **`omarchy-update` 需要重启时**，`pacman` role 通知一个 handler：最后一个 role 跑完后，它用 `systemd-run` 安排 5 分钟后重启。这样每晚的 sweep 先读到 PLAY RECAP，再重启；`/tmp` 是 tmpfs，重启后 `/tmp/provision.log` 就没了（DECISIONS Q14）。
 
@@ -221,7 +219,6 @@ Omarchy 支持的 agent 里，**Cursor CLI 和 Muse Code 不装**：前者的模
 - **新装的 agent 要在 m2 上跑一次 `cliproxy-tier <host>`。** `copilot-gw`、`gemini-gw`、`grok-gw`、`kimi-gw`、crush、openclaw 的网关配置以及 OpenClaw 的 onboarding 都由它完成，而它只处理已经装好的 agent。
 - **rename 钩子装上或更新后**，Codex 下次启动会问是否信任这个钩子，选「Trust all and continue」；已经在跑的 Claude Code 会话要打开一次 `/hooks` 或重启才会用上。
 - **agent-reach 只配好了零配置的渠道。** 其余渠道要 cookie 或点一下浏览器扩展。要补齐就自己交互式跑一次 `agent-reach doctor`。
-- **`claude-mem` 的模型 id 要手工升级。** `roles/claude-mem/vars/main.yml` 里的 `claude_mem_model` 只认完整 id，id 一旦下架就是一个硬错误 `Fatal error: Unknown Claude model`，**会让 play 失败**。
 - **paseo 的配对**：`paseo daemon pair`。
 - **Tailscale 首次登录**：没有 `TAILSCALE_AUTH_KEY` 时手工 `sudo tailscale up --accept-dns --accept-routes --operator=$USER`。
 
