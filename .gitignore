@@ -1,5 +1,4 @@
 .env
-.serena/
 __pycache__/
 
 # Codex's interactive `/import` writes a byte-identical duplicate of the TRACKED
