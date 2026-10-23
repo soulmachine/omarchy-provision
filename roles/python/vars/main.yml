@@ -8,6 +8,7 @@ python_cli_tools:
   - ruff
   - pre-commit
   - httpie
+  - pgcli
 
 # Extra packages to install *into* a tool's own uv environment, as `<tool>: <package>`.
 # ansible-lint resolves `community.general.*` against the collections in its own environment,
@@ -15,3 +16,6 @@ python_cli_tools:
 # `syntax-check[unknown-module]`. `--with ansible` puts the collection bundle there.
 python_cli_tool_extras:
   ansible-lint: ansible
+  # pgcli depends on pure-Python psycopg, which needs a system libpq that no role
+  # installs; psycopg-binary bundles one.
+  pgcli: psycopg-binary

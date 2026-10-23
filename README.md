@@ -103,7 +103,7 @@ pre-commit run --all-files
 | direnv | 目录级环境变量管理（pacman `direnv`）；hook 写入 `~/.bashrc` |
 | dotenv | 不装任何软件；把 `.env` 以托管块写入 `~/.bashrc` 的交互守卫之上，让非交互式 shell（`ssh host 'bash -lc cmd'`、git hook、cron）也能读到其中的变量 |
 | uv | Python 包与工具管理器（Omarchy 的 mise 工具）；bash 补全写入 `~/.bashrc` |
-| python | 用 uv 安装 Python 命令行工具：yamllint、ansible-lint（带 `--with ansible`）、ruff、pre-commit、httpie（依赖 uv） |
+| python | 用 uv 安装 Python 命令行工具：yamllint、ansible-lint（带 `--with ansible`）、ruff、pre-commit、httpie、pgcli（依赖 uv） |
 | mise | mise 本身是 Omarchy 的 pacman 包 `mise-bin`，不能 `self-update`；本 role 跑**一次** `mise up` 升级全部 mise 工具（和 `omarchy-update` 调用的是同一条命令），各工具 role 只在工具缺失时安装 |
 | go | Go（mise） |
 | nodejs | Node.js（mise，`latest` 而非 LTS，与 Omarchy 自身一致） |
