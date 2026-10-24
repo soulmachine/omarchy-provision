@@ -45,6 +45,7 @@
     - playwright-cli
     - hermes
     - browseros-neo
+    - hindsight
     - ponytail
     - context-mode
     - role: paseo

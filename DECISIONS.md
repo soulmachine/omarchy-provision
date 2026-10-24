@@ -377,3 +377,13 @@
 **Outcome:** applied
 **Ref:** (pending)
 **Supersedes:** Q36 — adds the Agents bar condition; the gateway condition stays.
+
+## Q38 — interactive/hindsight-role — tradeoff
+
+**Question:** Port macbook-provision's `hindsight` role (agent CLIs wired to the fleet Hindsight server on mac-mini-m2) and its pi-role change here?
+**Options considered:** same role, same files / a Linux-specific variant
+**Chosen:** The same files. The role branches only for the relay (a LaunchAgent on macOS, a systemd user unit on Linux), so one copy serves all three repos. The pi role keeps the Hindsight `extensions` entry, as in macbook-provision.
+**Decided-by:** agent
+**Justification:** Fleet rule: a change in one provisioning repo is synced to the other two. The reasoning is in macbook-provision Q284 and coding-agent Q605–Q610.
+**Outcome:** applied
+**Ref:** macbook-provision 631f64a
