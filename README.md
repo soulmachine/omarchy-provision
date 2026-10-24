@@ -130,7 +130,6 @@ pre-commit run --all-files
 | agent-reach | 多渠道触达工具；上游只提供面向 AI agent 的安装文档，故由 `claude-gw -p` 按文档驱动安装。`~/.local/bin/claude-gw` 由 mac-mini-m2 上的 `cliproxy-tier` 写入，缺失时 role 报错而**不自行创建**（依赖 claude-code、python） |
 | playwright | 浏览器自动化：mise `npm:playwright`（依赖 nodejs） |
 | playwright-cli | Playwright CLI：mise `npm:@playwright/cli`，并安装其 skill（依赖 playwright） |
-| claude-mem | 移除用 role（2026-10-23 起）：跑 `npx -y claude-mem uninstall`，清掉它留在 Gemini、Codex、opencode 里的接线，删除 `~/.claude-mem`；所有主机跑过后删掉本 role（依赖 nodejs） |
 | hermes | Hermes 个人 agent（Nous Research）的 CLI 版：`omarchy-install-hermes-cli`（mise pipx）；`~/.hermes/SOUL.md` 链接到 `~/.agents/AGENTS.md` |
 | browseros-neo | [BrowserOS neo](https://browseros.com)（给 agent 用的 Chromium 浏览器）：pacman `fuse2`，下载上游 `https://cdn.browseros.com/download/BrowserOS_neo.AppImage` 到 `~/.local/share/browseros-neo/`（每次下载、内容变了才算变更），并写入启动器的 `.desktop`；把 MCP 端点 `http://127.0.0.1:9010/mcp`（neo 的 proxy 端口；文档里的 9200 不对）注册给每个已安装的 agent：Claude Code、codex、gemini、copilot、grok、hermes 用各自的 `mcp add`，kimi、omp、opencode、crush 合并进各自的 JSON 配置；URL 不对就替换（pi 不支持 MCP）；首次安装上游 `browseros-neo` skill，之后由运行中的 neo 自己更新。不开机自启（依赖 claude-code、nodejs） |
 | ponytail | 给所有 agent 安装 [ponytail](https://github.com/DietrichGebert/ponytail) 插件：Claude Code / Codex / OpenCode / pi / oh-my-pi / Hermes 各用其原生安装方式 |
