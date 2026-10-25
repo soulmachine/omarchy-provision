@@ -24,8 +24,12 @@ After 6 failures in 15 minutes it gives up. `serve service install` is also what
 supervisor that gave up.
 
 - **It installs only when `serve service status --json` is not `live`.** A reinstall restarts the
-  server and kills its sessions. A change of flags (port, PATH) needs a manual reinstall.
+  server and kills its sessions. A change of flags (port, address, PATH) needs a manual reinstall.
 - **Port 6768 is fixed,** so paired clients keep their address across restarts.
+- **It advertises the host's Tailscale IPv4** (`tailscale ip -4`) with `--pairing-address`, so a
+  pairing offer names an address that macbook-pro-m3 reaches. It is an IP, not a MagicDNS name,
+  because one fleet host answers `*.ts.net` from a fake-IP resolver. Without Tailscale, the role
+  leaves the flag out.
 - **It runs through `bash -lc`.** The unit pins the PATH it was installed with, and the agent CLIs
   the server spawns live on mise's shims.
 - **An active unit is not a live server.** After installing, the role polls the status for up to 60
@@ -37,8 +41,17 @@ supervisor that gave up.
 
 ## By hand
 
-- **Pairing.** The service never prints a pairing link. Pair from the Orca app (Settings → Remote
-  Orca Servers), or stop the service and run `orca-ide serve --port 6768 --pairing-address
-  <tailscale-ip>` in a terminal. Then paste the link into **Add Server** on the client.
+- **Pairing.** The service never prints a pairing link. When the Orca app is open on the server,
+  pair from it (Settings → Remote Orca Servers). Otherwise, on the server, with
+  `cli=/opt/stably-orca/resources/bin/orca-ide`:
+  1. `$cli serve service uninstall`, which frees the profile.
+  2. `$cli serve --port 6768 --pairing-address <tailscale-ip>` in a terminal. It prints a pairing link.
+  3. On the client, paste the link into **Add Server**, or run
+     `orca environment add --name <host> --pairing-code '<link>'`.
+  4. Ctrl+C the server, then `$cli serve service install --port 6768 --command $cli
+     --pairing-address <tailscale-ip>`.
+
+  The link is a secret: do not paste it into a file or a chat. Do not run step 2 while the app
+  serves the same profile, because `serve` then exits with code 3.
 - **Agent accounts and skills:** `orca-ide account add --agent claude|codex` and
   `orca-ide skills install`.
