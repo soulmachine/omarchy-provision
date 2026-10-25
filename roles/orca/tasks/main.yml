@@ -1,6 +1,6 @@
 ---
-# Orca (https://onorca.dev): the app from the AUR, and the server, because every Omarchy host
-# is always-on (DECISIONS Q26, macbook-provision Q243). Orca has no separate server package:
+# Orca (https://onorca.dev): the AUR package for its CLI, and the server, because every Omarchy
+# host is always-on (DECISIONS Q26, macbook-provision Q243). Orca has no separate server package:
 # the CLI and `orca serve` ship inside the app.
 #
 # `stably-orca-bin` is the first AUR package since Q10, by Frank's request. It extracts
@@ -33,6 +33,20 @@
     src: "{{ orca_cli }}"
     dest: "{{ lookup('env', 'HOME') }}/.local/bin/orca-ide"
     state: link
+
+# The app and the service cannot share ~/.config/orca: the service's server holds it, and the
+# app refuses to start (Q42). Frank chose the server alone, so a user entry hides the package's
+# launcher. The package stays, because the CLI and `orca serve` run its Electron binary.
+- name: Hide the Orca desktop launcher
+  ansible.builtin.copy:
+    dest: "{{ lookup('env', 'HOME') }}/.local/share/applications/stably-orca.desktop"
+    content: |
+      [Desktop Entry]
+      Type=Application
+      Name=Orca
+      Hidden=true
+      NoDisplay=true
+    mode: "0644"
 
 # Orca's skill for driving its CLI, the copy this Orca build ships. `skills install` writes it to
 # ~/.agents/skills/orca-cli and links it into each agent it detects, and later replaces a copy

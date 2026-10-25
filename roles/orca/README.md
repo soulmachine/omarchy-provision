@@ -2,7 +2,7 @@
 
 [Orca](https://onorca.dev) is an IDE that runs coding agents across worktrees. The Mac role puts
 the desktop app on MacBooks and the Orca server on always-on Macs. Every Omarchy host is always-on,
-so every host gets the app and the server (DECISIONS Q26, macbook-provision Q243).
+so every host gets the server (DECISIONS Q26, macbook-provision Q243), and the app stays hidden (Q42).
 
 ## The AUR package
 
@@ -16,6 +16,13 @@ role calls it by full path and passes the same path as `--command` to the servic
 The role also registers the CLI as the app's Settings → General → Orca CLI does: it links
 `~/.local/bin/orca-ide` to that path, which puts `orca-ide` on PATH. If a file that is not a link
 already sits there, the task fails rather than replace it, as the app does.
+
+The app itself is hidden. Its server and the `orca-serve` service cannot share `~/.config/orca`:
+while the service runs, the app refuses to start ("Another orcad … already owns the data root").
+Frank chose the server alone on Linux (DECISIONS Q42), so the role writes a user entry
+`~/.local/share/applications/stably-orca.desktop` with `Hidden=true`, and the launcher no longer lists Orca.
+The package stays, because the CLI and `orca serve` run its Electron binary, and Orca ships no
+CLI-only build.
 
 ## The server
 
@@ -44,9 +51,7 @@ supervisor that gave up.
 
 ## By hand
 
-- **Pairing.** The service never prints a pairing link. When the Orca app is open on the server,
-  pair from it: Settings → Remote Orca Servers → Advertise this app as a server → **New Link**,
-  pick the `100.x.y.z` address, then **Generate Access Link**. Otherwise, on the server, with
+- **Pairing.** The service never prints a pairing link. On the server, with
   `cli=/opt/stably-orca/resources/bin/orca-ide`:
   1. `$cli serve service uninstall`, which frees the profile.
   2. `$cli serve --port 6768 --pairing-address <tailscale-ip>` in a terminal. It prints a pairing link.
@@ -55,10 +60,9 @@ supervisor that gave up.
   4. Ctrl+C the server, then `$cli serve service install --port 6768 --command $cli
      --pairing-address <tailscale-ip>`.
 
-  The link is a secret: do not paste it into a file or a chat. Do not run step 2 while the app
-  serves the same profile, because `serve` then exits with code 3. Each client gets its own
-  grant: revoke one in the server's app under **Shared Server Access**. A new link replaces the
-  last unused one. If the client shows the server as Disconnected, click **Connect**.
+  The link is a secret: do not paste it into a file or a chat. Each client gets its own grant, and
+  a new link replaces the last unused one. If the client shows the server as Disconnected, click
+  **Connect**.
 - **Agent accounts and skills** must be set up in the server's own shell, because a paired client
   disables Add account, and remote sessions use the server's PATH, home and logins:
   `$cli account add --agent claude|codex`. The role installs the `orca-cli` skill on every run
