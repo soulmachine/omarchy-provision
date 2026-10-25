@@ -42,7 +42,8 @@ supervisor that gave up.
 ## By hand
 
 - **Pairing.** The service never prints a pairing link. When the Orca app is open on the server,
-  pair from it (Settings → Remote Orca Servers). Otherwise, on the server, with
+  pair from it: Settings → Remote Orca Servers → Advertise this app as a server → **New Link**,
+  pick the `100.x.y.z` address, then **Generate Access Link**. Otherwise, on the server, with
   `cli=/opt/stably-orca/resources/bin/orca-ide`:
   1. `$cli serve service uninstall`, which frees the profile.
   2. `$cli serve --port 6768 --pairing-address <tailscale-ip>` in a terminal. It prints a pairing link.
@@ -52,6 +53,12 @@ supervisor that gave up.
      --pairing-address <tailscale-ip>`.
 
   The link is a secret: do not paste it into a file or a chat. Do not run step 2 while the app
-  serves the same profile, because `serve` then exits with code 3.
-- **Agent accounts and skills:** `orca-ide account add --agent claude|codex` and
-  `orca-ide skills install`.
+  serves the same profile, because `serve` then exits with code 3. Each client gets its own
+  grant: revoke one in the server's app under **Shared Server Access**. A new link replaces the
+  last unused one. If the client shows the server as Disconnected, click **Connect**.
+- **Agent accounts and skills** must be set up in the server's own shell, because a paired client
+  disables Add account, and remote sessions use the server's PATH, home and logins:
+  `$cli account add --agent claude|codex`, `$cli skills install --skill orca-cli --skill
+  orchestration`, and later `$cli skills update --all`.
+
+Source for the steps: <https://www.onorca.dev/docs/remote-servers>.
