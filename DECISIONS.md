@@ -397,3 +397,13 @@
 **Justification:** Fleet rule: a change in one provisioning repo is synced to the other two. The reasoning is in macbook-provision Q289.
 **Outcome:** applied
 **Ref:** 334c7b5, macbook-provision 92a6870
+
+## Q40 — interactive/orca-cli-registration — gate-resolution
+
+**Question:** Frank asked to register the Orca CLI under Settings → General → Orca CLI on every host. What does registering mean on Linux, and how does the role do it?
+**Options considered:** a role-owned symlink matching the app's check / clicking Register in each app by hand / a symlink with `force`
+**Chosen:** An `ansible.builtin.file` link from `~/.local/bin/orca-ide` to `/opt/stably-orca/resources/bin/orca-ide`, without `force`.
+**Decided-by:** agent
+**Justification:** In Orca 1.4.239's CLI installer (app.asar), Linux counts the CLI as registered when `~/.local/bin/orca-ide` resolves to the app's `resources/bin/orca-ide`, and the app checks nothing else. Without `force`, a file there that is not a link fails the task, as the app also refuses to replace a non-Orca command. mac-mini-2018-omarchy had no link, so its Settings page read not registered. The link also puts `orca-ide` on PATH, but the role still calls the full path, because the service unit pins it. On macOS the cask's link already counts: Frank saw Registered on macbook-pro-m3, so macbook-provision changed only its README.
+**Outcome:** applied
+**Ref:** (pending)

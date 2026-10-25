@@ -25,6 +25,15 @@
   ansible.builtin.set_fact:
     orca_cli: /opt/stably-orca/resources/bin/orca-ide
 
+# Settings → General → Orca CLI counts the CLI as registered when ~/.local/bin/orca-ide links
+# to the app's launcher, which is orca_cli. It also puts `orca-ide` on PATH. No `force`: like
+# the app, refuse to replace a file there that is not ours.
+- name: Register the Orca CLI
+  ansible.builtin.file:
+    src: "{{ orca_cli }}"
+    dest: "{{ lookup('env', 'HOME') }}/.local/bin/orca-ide"
+    state: link
+
 # Upstream's `orca serve service install` writes, enables and restarts the systemd user unit
 # `orca-serve.service`, which runs `orca-ide serve --supervise --no-pairing`: it restarts the
 # server with backoff and waits while an update replaces the app. It runs only when the service

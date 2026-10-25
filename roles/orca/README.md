@@ -10,9 +10,12 @@ Orca has no separate server package. The CLI and `orca serve` ship inside the ap
 the AUR package `stably-orca-bin`, the first AUR package since Q10. It extracts upstream's AppImage to
 `/opt/stably-orca`, so it needs no FUSE. The role installs it with `yay -S --needed --noconfirm`
 when `pacman -Q` lacks it. `omarchy-update -y` in the pacman role upgrades it. The package adds only
-a GUI wrapper, `/usr/bin/stably-orca`. The CLI is `/opt/stably-orca/resources/bin/orca-ide` and is
-not on PATH, so the role calls it by full path and passes the same path as `--command` to the
-service installer.
+a GUI wrapper, `/usr/bin/stably-orca`. The CLI is `/opt/stably-orca/resources/bin/orca-ide`. The
+role calls it by full path and passes the same path as `--command` to the service installer.
+
+The role also registers the CLI as the app's Settings → General → Orca CLI does: it links
+`~/.local/bin/orca-ide` to that path, which puts `orca-ide` on PATH. If a file that is not a link
+already sits there, the task fails rather than replace it, as the app does.
 
 ## The server
 
