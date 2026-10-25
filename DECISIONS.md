@@ -396,4 +396,4 @@
 **Decided-by:** agent
 **Justification:** Fleet rule: a change in one provisioning repo is synced to the other two. The reasoning is in macbook-provision Q289.
 **Outcome:** applied
-**Ref:** (pending)
+**Ref:** 334c7b5, macbook-provision 92a6870
