@@ -1,0 +1,12 @@
+--- a/usr/bin/omarchy-update-orphan-pkgs
++++ b/usr/bin/omarchy-update-orphan-pkgs
+@@ -12,7 +12,8 @@
+ printf '  %s\n' "${orphans[@]}"
+ echo
+ 
+-if [[ ! -t 0 || ! -t 1 ]]; then
++# Local patch (omarchy-provision Q45): omarchy-update -y keeps the orphans and moves on.
++if [[ ${OMARCHY_UPDATE_UNATTENDED:-} == 1 || ! -t 0 || ! -t 1 ]]; then
+   echo "${#orphans[@]} orphaned package(s) found. Re-run omarchy-update-orphan-pkgs in a terminal to review/remove them."
+   echo
+   exit 0

@@ -98,7 +98,7 @@ pre-commit run --all-files
 
 | Role | 说明 |
 |------|------|
-| pacman | 先跑 `omarchy-update -y` 升级一切（仓库包、AUR、mise 工具、Omarchy 迁移），失败时记录下来、在 play 末尾才报错，不阻断后面的 role；需要重启时只提示，从不重启；然后装基础包 git、curl、wget、jq、ripgrep、fd、tree、htop、docker、ffmpeg、gnupg、tmux；VS Code 用 `omarchy-install-editor-vscode`（Claude、Gemini、ChatGPT 桌面版与 pearcleaner 没有 Linux 版；Sublime Text 已去掉） |
+| pacman | 先装两个补丁，让 `omarchy-update-orphan-pkgs` 和 `omarchy-update-restart` 在 `-y` 下不弹 gum 提示（保留孤立包、只报告该重启），并装 pacman hook `96-omarchy-unattended.hook`，omarchy 包升级时在同一个事务里重新打补丁；补丁打不上时在 play 末尾报错。再跑 `omarchy-update -y` 升级一切（仓库包、AUR、mise 工具、Omarchy 迁移），失败时记录下来、在 play 末尾才报错，不阻断后面的 role；需要重启时只提示，从不重启；然后装基础包 git、curl、wget、jq、ripgrep、fd、tree、htop、docker、ffmpeg、gnupg、tmux；VS Code 用 `omarchy-install-editor-vscode`（Claude、Gemini、ChatGPT 桌面版与 pearcleaner 没有 Linux 版；Sublime Text 已去掉） |
 | github | gh CLI（Omarchy 的 mise 工具）；若环境中有 `GITHUB_TOKEN`（由 `gh-token-fleet` 写入 `~/.bashrc`，不来自 `.env`），另外配置 SSH key 与 git 签名 |
 | direnv | 目录级环境变量管理（pacman `direnv`）；hook 写入 `~/.bashrc` |
 | dotenv | 不装任何软件；把 `.env` 以托管块写入 `~/.bashrc` 的交互守卫之上，让非交互式 shell（`ssh host 'bash -lc cmd'`、git hook、cron）也能读到其中的变量 |

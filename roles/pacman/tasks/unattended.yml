@@ -1,0 +1,43 @@
+---
+# `-y` exports OMARCHY_UPDATE_UNATTENDED, but omarchy-update-orphan-pkgs and
+# omarchy-update-restart still ask through gum, and `script` gives gum a pty, so the run hangs
+# (DECISIONS Q45). Local patches make both honor the variable: orphans are kept and a due
+# reboot is only reported. They go in before the update, and the pacman hook re-applies them
+# inside the same pacman transaction that rewrites the files, before the prompts run.
+- name: Install the unattended-update patches
+  become: true
+  ansible.builtin.copy:
+    src: "{{ item }}"
+    dest: /usr/local/share/omarchy-unattended/
+    mode: "0644"
+  loop:
+    - omarchy-update-orphan-pkgs.patch
+    - omarchy-update-restart.patch
+
+- name: Install the unattended-update patch script
+  become: true
+  ansible.builtin.copy:
+    src: omarchy-unattended-patch
+    dest: /usr/local/bin/omarchy-unattended-patch
+    mode: "0755"
+
+- name: Install the unattended-update pacman hook
+  become: true
+  ansible.builtin.copy:
+    src: 96-omarchy-unattended.hook
+    dest: /etc/pacman.d/hooks/96-omarchy-unattended.hook
+    mode: "0644"
+
+# Exits 1 when a patch no longer applies, which leaves that file stock. Reported at the end of
+# the play, like the CLIProxyAPI patches.
+- name: Apply the unattended-update patches
+  become: true
+  ansible.builtin.command: /usr/local/bin/omarchy-unattended-patch
+  register: pacman_unattended_patch
+  changed_when: "'omarchy-unattended: patched' in pacman_unattended_patch.stdout"
+  failed_when: pacman_unattended_patch.rc not in [0, 1]
+
+- name: Record an unattended-update patch that no longer applies
+  ansible.builtin.set_fact:
+    pacman_unattended_patch_failed: "{{ pacman_unattended_patch.stderr }}"
+  when: pacman_unattended_patch.rc | default(0) == 1

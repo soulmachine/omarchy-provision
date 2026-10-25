@@ -447,3 +447,13 @@
 **Justification:** The provisioning repos stay in sync (`~/.agents/AGENTS.md`), and a Node pruned by mise or a package upgrade leaves the daemon with nothing to run here too. Same change in macbook-, ubuntu- and omarchy-provision.
 **Outcome:** applied
 **Ref:** macbook-provision Q292
+
+## Q45 — interactive/omarchy-unattended-prompts — tradeoff
+
+**Question:** `omarchy-update -y` exports `OMARCHY_UPDATE_UNATTENDED=1`, yet `omarchy-update-orphan-pkgs` and `omarchy-update-restart` still ask through `gum confirm`, and `script` gives gum a pty, so the nightly run hangs (coding-agent Q488, Q589). How to stop that?
+**Options considered:** run `omarchy-update` without a pty / patch both prompts to honor `OMARCHY_UPDATE_UNATTENDED` / keep reporting the host as unfinished
+**Chosen:** Patch both prompts (Frank's choice). Orphan removal takes its existing non-terminal branch (keep and report). `confirm_reboot` prints that a reboot is due and returns, so the play's own reboot check decides (Q14). The patches sit in `/usr/local/share/omarchy-unattended/`, applied by `/usr/local/bin/omarchy-unattended-patch` before the update and by the pacman hook `96-omarchy-unattended.hook` whenever the omarchy package rewrites either file. That hook runs inside `omarchy-update-system-pkgs`' own transaction, before the prompts. A patch that stops applying fails the play at the end, as the CLIProxyAPI patches do.
+**Decided-by:** human
+**Justification:** The two files are owned by the `omarchy` package in `/usr/bin`, so a one-off edit would be lost at the next upgrade, which happens during the very run that reaches the prompts. The hook pattern is already proven here by `95-omarchy-cliproxy-usage.hook`. Stock interactive behavior is unchanged: without the variable both prompts still ask.
+**Outcome:** applied
+**Ref:** coding-agent Q488, Q589; roles/pacman/tasks/unattended.yml

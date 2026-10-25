@@ -123,6 +123,13 @@
           Rebase the patch in roles/omarchy-cliproxy/files/ against the new Omarchy file.
       when: omarchy_cliproxy_patch_failed is defined
 
+    - name: Fail when an unattended-update patch no longer applies
+      ansible.builtin.fail:
+        msg: >-
+          {{ pacman_unattended_patch_failed }}
+          Rebase the patch in roles/pacman/files/ against the new Omarchy file.
+      when: pacman_unattended_patch_failed is defined
+
     - name: Fail when the Orca server is not live
       ansible.builtin.fail:
         msg: "{{ orca_serve_down }}"

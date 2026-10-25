@@ -14,6 +14,10 @@
   changed_when: false
   check_mode: false
 
+# Before the update, so `-y` cannot hang on a gum prompt (DECISIONS Q45; see unattended.yml).
+- name: Patch the update's gum prompts to honor OMARCHY_UPDATE_UNATTENDED
+  ansible.builtin.include_tasks: unattended.yml
+
 # A failure is recorded, not raised: this is the first role, and one package that cannot
 # upgrade must not skip the 38 roles after it. main.yml's post_tasks fail the play on the
 # recorded message.

@@ -1,0 +1,15 @@
+--- a/usr/bin/omarchy-update-restart
++++ b/usr/bin/omarchy-update-restart
+@@ -5,6 +5,12 @@
+ echo
+ 
+ confirm_reboot() {
++  # Local patch (omarchy-provision Q45): omarchy-update -y reports a due reboot instead of
++  # asking; the provision play schedules the reboot itself (Q14).
++  if [[ ${OMARCHY_UPDATE_UNATTENDED:-} == 1 ]]; then
++    echo "$1 Skipped: unattended update, reboot later."
++    return 0
++  fi
+   gum confirm "$1" && { omarchy-system-reboot; exit 0; }
+ }
+ 

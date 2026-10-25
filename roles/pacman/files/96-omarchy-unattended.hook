@@ -1,0 +1,11 @@
+[Trigger]
+Operation = Install
+Operation = Upgrade
+Type = Path
+Target = usr/bin/omarchy-update-orphan-pkgs
+Target = usr/bin/omarchy-update-restart
+
+[Action]
+Description = Re-applying the unattended-update patches to Omarchy's orphan and restart prompts...
+When = PostTransaction
+Exec = /usr/local/bin/omarchy-unattended-patch

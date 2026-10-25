@@ -1,0 +1,19 @@
+#!/bin/bash
+# Re-apply the patches that make omarchy-update -y skip its two gum prompts, the orphan
+# removal and the reboot (DECISIONS Q45). /etc/pacman.d/hooks/96-omarchy-unattended.hook runs
+# this each time the omarchy package rewrites one of them. Each patch names its target in its
+# +++ line.
+set -uo pipefail
+status=0
+for patch_file in /usr/local/share/omarchy-unattended/*.patch; do
+  target=/$(sed -n 's|^+++ b/||p' "$patch_file" | head -1)
+  if patch --dry-run --reverse --force --silent "$target" "$patch_file" >/dev/null 2>&1; then
+    echo "omarchy-unattended: $target is already patched"
+  elif patch --dry-run --forward --silent "$target" "$patch_file" >/dev/null 2>&1; then
+    patch --forward --silent --no-backup-if-mismatch "$target" "$patch_file" && echo "omarchy-unattended: patched $target"
+  else
+    echo "omarchy-unattended: $patch_file no longer applies to $target, so omarchy-update -y can block on its gum prompt again. Rebase the patch." >&2
+    status=1
+  fi
+done
+exit $status
