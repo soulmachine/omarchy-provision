@@ -7,30 +7,31 @@
 # shell scripts: docs/install.md and docs/update.md are addressed "For AI
 # Agents" and branch on environment detection, doctor output, and which upstream
 # CLIs are already present. There is no idempotent one-liner to call. So this
-# role drives `claude-gw -p` headless and lets the agent execute the upstream doc.
+# role drives `claude -p` headless and lets the agent execute the upstream doc.
 #
-# claude-gw, not claude: an Omarchy host is gateway-only, so every agent reaches
-# models through CLIProxyAPI and native Claude Code has no login of its own here
-# (macbook-provision 8137cc2). The wrapper is written by `cliproxy-tier <host>` on
-# mac-mini-m2, never by this repo (grilling Q34), so a host without it fails here
-# with that instruction rather than getting a second writer for the same file.
+# An Omarchy host is gateway-only: plain `claude` reaches models through CLIProxyAPI with the key in
+# ~/.claude/settings.json (coding-agent Q665). `cliproxy-tier <host>` on mac-mini-m2 writes it, never this
+# repo (grilling Q34), so a host without it fails here with that instruction rather than getting a second
+# writer for the same file.
 #
 # chdir to $HOME so the sub-agent never treats this repo as its workspace:
 # install.md forbids cloning/writing inside the working directory, and pointing
 # it at $HOME also keeps this repo's AGENTS.md out of the sub-agent's context.
 
-- name: Check for the claude-gw wrapper
-  ansible.builtin.stat:
-    path: "{{ lookup('env', 'HOME') }}/.local/bin/claude-gw"
+- name: Check that claude has the gateway settings
+  ansible.builtin.command: grep -q '"ANTHROPIC_BASE_URL"' "{{ lookup('env', 'HOME') }}/.claude/settings.json"
   register: agent_reach_claude_gw
+  changed_when: false
+  failed_when: false
+  check_mode: false
 
-- name: Fail when claude-gw is missing
+- name: Fail when claude has no gateway settings
   ansible.builtin.fail:
     msg: >-
-      ~/.local/bin/claude-gw is missing, and this role drives it to run agent-reach's install
-      and update docs. It is written by `cliproxy-tier <this host>` on mac-mini-m2, never by
-      this playbook. Run that, then re-run.
-  when: not agent_reach_claude_gw.stat.exists
+      ~/.claude/settings.json has no gateway settings, and this role drives `claude` to run
+      agent-reach's install and update docs. `cliproxy-tier <this host>` on mac-mini-m2 writes
+      them, never this playbook. Run that, then re-run.
+  when: agent_reach_claude_gw.rc != 0
 
 - name: Check whether agent-reach is installed
   # `command -v` is a shell builtin, hence shell rather than command. Covers a
@@ -44,7 +45,7 @@
 - name: Install agent-reach
   ansible.builtin.command:
     cmd: >-
-      claude-gw -p "Install agent-reach https://raw.githubusercontent.com/Panniantong/agent-reach/main/docs/install.md"
+      claude -p "Install agent-reach https://raw.githubusercontent.com/Panniantong/agent-reach/main/docs/install.md"
     chdir: "{{ lookup('env', 'HOME') }}"
   when: agent_reach_probe.rc != 0
   changed_when: true
@@ -79,7 +80,7 @@
 - name: Update agent-reach
   ansible.builtin.command:
     cmd: >-
-      claude-gw -p "update agent-reach: https://raw.githubusercontent.com/Panniantong/agent-reach/main/docs/update.md"
+      claude -p "update agent-reach: https://raw.githubusercontent.com/Panniantong/agent-reach/main/docs/update.md"
     chdir: "{{ lookup('env', 'HOME') }}"
   when:
     - agent_reach_probe.rc == 0

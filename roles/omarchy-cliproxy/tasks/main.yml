@@ -1,13 +1,15 @@
 ---
 # Omarchy's side of CLIProxyAPI on a gateway-only host (DECISIONS Q35, Q36): local patches
-# that send the agent launcher through the -gw wrappers and let the Agents bar's Claude and
-# Codex collectors read limits fetched from mac-mini-m2, plus the timer that fetches them.
-# Only an Omarchy version with the Agents bar, on a host that has the gateway's claude-gw and
-# no native Claude login, gets it.
-- name: Check for the gateway's claude-gw
-  ansible.builtin.stat:
-    path: "{{ lookup('env', 'HOME') }}/.local/bin/claude-gw"
+# that start the agent launcher's agents plain, on the gateway (coding-agent Q665), and let the
+# Agents bar's Claude and Codex collectors read limits fetched from mac-mini-m2, plus the timer
+# that fetches them. Only an Omarchy version with the Agents bar, on a host where claude has the
+# gateway settings and no native Claude login, gets it.
+- name: Check that claude has the gateway settings
+  ansible.builtin.command: grep -q '"ANTHROPIC_BASE_URL"' "{{ lookup('env', 'HOME') }}/.claude/settings.json"
   register: omarchy_cliproxy_gw
+  changed_when: false
+  failed_when: false
+  check_mode: false
 
 - name: Check for a native Claude login
   ansible.builtin.stat:
@@ -20,7 +22,7 @@
   register: omarchy_cliproxy_bar
 
 - name: Install the CLIProxyAPI patches and the Agents bar feed
-  when: omarchy_cliproxy_bar.stat.exists and omarchy_cliproxy_gw.stat.exists and not omarchy_cliproxy_login.stat.exists
+  when: omarchy_cliproxy_bar.stat.exists and omarchy_cliproxy_gw.rc == 0 and not omarchy_cliproxy_login.stat.exists
   block:
     - name: Install the Omarchy patches
       become: true
@@ -51,6 +53,18 @@
     # The script is ours: it prints "patched <file>" only when it changed one, and exits 1
     # when a patch no longer applies, which leaves that file stock. That is reported at the
     # end of the play, not here.
+    # Q665 retired the -gw wrappers. The launcher still patched to start them cannot take the new
+    # patch, so take the old one out first. It stays out of the patch folder, so the hook never applies it.
+    - name: Remove the launcher's retired -gw patch
+      become: true
+      ansible.builtin.shell: |
+        old="{{ role_path }}/files/retired/omarchy-agent-gw.patch"
+        if patch --dry-run --reverse --force --silent /usr/bin/omarchy-agent "$old" >/dev/null 2>&1; then
+          patch --reverse --force --silent --no-backup-if-mismatch /usr/bin/omarchy-agent "$old" && echo reverted
+        fi
+      register: omarchy_cliproxy_retired
+      changed_when: "'reverted' in omarchy_cliproxy_retired.stdout"
+
     - name: Apply the Omarchy patches
       become: true
       ansible.builtin.command: /usr/local/bin/omarchy-cliproxy-patch

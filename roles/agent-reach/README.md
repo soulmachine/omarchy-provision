@@ -3,10 +3,10 @@
 - **An agent installs it, not a script.** Upstream ships `docs/install.md` and `docs/update.md` as
   prompts addressed "For AI Agents". They branch on environment detection, `agent-reach doctor`
   output, and which upstream CLIs exist, so there is no idempotent one-liner. The role runs
-  `claude-gw -p "<instruction> <doc URL>"` and lets the sub-agent execute the doc. It uses `claude-gw`
-  because an Omarchy host is gateway-only: every agent reaches models through CLIProxyAPI, and the
-  wrapper is written by `cliproxy-tier <host>` on mac-mini-m2, never by this repo. A host without it
-  fails at the first task with that instruction. Both calls `chdir` to `$HOME`: `install.md` forbids writing inside the working
+  `claude -p "<instruction> <doc URL>"` and lets the sub-agent execute the doc. Plain `claude` reaches
+  the gateway with the key in `~/.claude/settings.json` (coding-agent Q665).
+  An Omarchy host is gateway-only, and `cliproxy-tier <host>` on mac-mini-m2 writes those settings, never this repo. A host without them fails at the first task with that instruction.
+  Both calls `chdir` to `$HOME`: `install.md` forbids writing inside the working
   directory, and `$HOME` keeps this repo's `AGENTS.md` out of the sub-agent's context.
 - **Idempotency hinges on `agent-reach check-update`'s stdout, not its exit code.** The command
   always exits 0. Install runs only when `command -v agent-reach` fails. Update runs only when

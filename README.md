@@ -119,15 +119,15 @@ pre-commit run --all-files
 | opencode | OpenCode CLI（Omarchy 的 mise 工具 `opencode`，依赖 nodejs） |
 | omp | oh-my-pi（Omarchy 的 mise 工具，命令 `omp`） |
 | pi | pi coding agent（Omarchy 的 mise 工具 `pi`），并下发 `~/.pi/agent/settings.json` |
-| copilot | GitHub Copilot CLI（Omarchy 的 mise 工具 `copilot`）；走网关用的 `copilot-gw` 由 m2 上的 `cliproxy-tier` 写入 |
+| copilot | GitHub Copilot CLI（Omarchy 的 mise 工具 `copilot`）；m2 上的 `cliproxy-tier` 把它的 stub 换成走网关的 shim |
 | crush | Crush（Charm，Omarchy 的 mise 工具 `crush`）；`~/.config/crush/crushrc` 里的网关 provider 由 `cliproxy-tier` 写入 |
-| gemini | Gemini CLI（Omarchy 的 mise 工具 `gemini`）；`gemini-gw` 及其网关配置（`~/.gemini-gw`）由 `cliproxy-tier` 写入，`gemini` 本身保持原生（依赖 nodejs） |
-| grok | Grok CLI（Omarchy 的 mise 工具 `npm:@xai-official/grok`）；`grok-gw` 及其网关配置（`~/.grok-gw`）由 `cliproxy-tier` 写入，`grok` 本身保持原生（依赖 nodejs） |
+| gemini | Gemini CLI（Omarchy 的 mise 工具 `gemini`）；`gemini` 本身经网关（`cliproxy-tier` 写入 `~/.local/bin/gemini` shim 和 `~/.gemini` 里的网关配置），用 Google 登录时用 `gemini-origin`（`~/.gemini-origin`）（依赖 nodejs） |
+| grok | Grok CLI（Omarchy 的 mise 工具 `npm:@xai-official/grok`）；`grok` 本身经网关（`cliproxy-tier` 把网关配置写入 `~/.grok`），用 xAI 登录时用 `grok-origin`（`~/.grok-origin`）（依赖 nodejs） |
 | openclaw | OpenClaw：`omarchy-install-openclaw-cli`（pacman `openclaw`）；onboarding 由 m2 上的 `cliproxy-tier` 负责，未 onboarding 时只打印提示；daemon 跑的 Node 或 OpenClaw 版本过期时用 `openclaw gateway install --force` 重写并重启 |
 | dsh | DeepSeek Harness（mise 工具 `npm:@deepseek-ai/dsh`，另装 mise 工具 `pnpm`，因为 `dsh plugin` 靠 PATH 上的 pnpm 装插件）；按 `roles/dsh/vars/main.yml` 每次对 `web`、`tui` 两个 profile 的每个 npm 插件跑 `dsh plugin --profile <p> add <spec>@latest`：缺的就装，旧的就升级，且都经过 dsh 的兼容性检查（`update` 不检查）；git 插件 `dsh-purge`（上游 `github:YuJunZhiXue/dsh-purge`；`mmparko` 镜像停在 1.1.71，其 `{{cwd}}` 在 dsh 0.2.1-rc.2 上让每轮对话失败）装好后改用 `update dsh-purge` 拉到分支最新提交，其 postinstall 由 profile 的 `pnpm-workspace.yaml` 里 `allowBuilds: {dsh-purge: false}` 跳过（`dsh plugin add` 自己会把它加进 bundles）。按 `pnpm-lock.yaml` 前后校验和判断变更（不到一天的新版本被 pnpm 的 minimumReleaseAge 挡住，下次再装）。dsh 拒绝的插件（如与当前 dsh 不兼容的 `dsh-find-plugin`，或要求更新 dsh 的插件新版本）只打印警告并保留已装版本，等兼容版本发布后自动装上 |
 | agent-sync | GitHub release 的二进制放到 `~/.local/bin/agent-sync`（AUR 只有过期的 0.1.0）；把 `~/.agents/` 扇出到各 agent；并托管每晚 02:17 的 `agent-sync sync` cron |
 | skills | 用 `npx skills@latest add` 安装整源与只取指定技能的源，并扇出到各 agent 的 skills 目录；详见下文「Agent CLI 与技能」（依赖 claude-code、codex） |
-| agent-reach | 多渠道触达工具；上游只提供面向 AI agent 的安装文档，故由 `claude-gw -p` 按文档驱动安装。`~/.local/bin/claude-gw` 由 mac-mini-m2 上的 `cliproxy-tier` 写入，缺失时 role 报错而**不自行创建**（依赖 claude-code、python） |
+| agent-reach | 多渠道触达工具；上游只提供面向 AI agent 的安装文档，故由 `claude -p` 按文档驱动安装。`claude` 的网关配置（`~/.claude/settings.json`）由 mac-mini-m2 上的 `cliproxy-tier` 写入，缺失时 role 报错而**不自行创建**（依赖 claude-code、python） |
 | playwright | 浏览器自动化：mise `npm:playwright`（依赖 nodejs） |
 | playwright-cli | Playwright CLI：mise `npm:@playwright/cli`，并安装其 skill（依赖 playwright） |
 | hermes | Hermes 个人 agent（Nous Research）的 CLI 版：`omarchy-install-hermes-cli`（mise pipx）；`~/.hermes/SOUL.md` 链接到 `~/.agents/AGENTS.md` |
@@ -148,14 +148,14 @@ pre-commit run --all-files
 | tmux | 终端复用器（pacman）；tag `terminal-multiplexer`（`pacman` role 的基础包里也有，重复无害） |
 | herdr | Omarchy 自带的 pacman 包，本 role 只确认它在、装 herdr skill、在 `~/.bashrc` 加终端标题函数，并用 herdr-rename-hook skill 的 `install.sh` 接上 `/rename` 钩子（Claude Code 与 Codex 的 `/rename` 同步成 Herdr 的 agent、pane 和 tab 名）；tag `terminal-multiplexer` |
 | eza | 在 `~/.bashrc` 末尾（Omarchy rc 之后）重定义 `ls`、`lt`：没给路径时补 `.`。否则 eza 在非 tty 的 stdin 上会读 stdin 里的文件名，agent 的 shell 卡住或什么都不列。辅助函数叫 `eza_ls`，不以 `_` 开头，因为 Claude Code 的 shell 快照会丢掉 `_` 开头的函数 |
-| omarchy-cliproxy | 只在有 Agents bar（`/usr/bin/omarchy-agent-usage-update`）的网关主机（有 m2 写入的 `~/.local/bin/claude-gw`、没有原生 Claude 登录）上运行：装三个 Omarchy 补丁（`omarchy-agent` 启动器改走 `-gw` 包装器；Agents bar 的 Claude、Codex 用量采集器读网关的用量文件）、打补丁脚本 `/usr/local/bin/omarchy-cliproxy-patch` 和 pacman hook（Omarchy 升级后重新打补丁；补丁打不上时在 play 末尾报错）；再装 systemd user timer `omarchy-cliproxy-usage.timer`，每 5 分钟 ssh 到 mac-mini-m2，从 stdin 运行 `cliproxy-usage-probe`，m2 只返回用量结果、不返回 token，写入 `~/.local/state/cliproxy/{claude,codex}-usage.json` 并刷新 Agents bar |
+| omarchy-cliproxy | 只在有 Agents bar（`/usr/bin/omarchy-agent-usage-update`）的网关主机（`~/.claude/settings.json` 里有 m2 写入的网关配置、没有原生 Claude 登录）上运行：装三个 Omarchy 补丁（`omarchy-agent` 启动器直接用经网关的 `claude`、`codex`、`copilot`、`gemini`；Agents bar 的 Claude、Codex 用量采集器读网关的用量文件）、打补丁脚本 `/usr/local/bin/omarchy-cliproxy-patch` 和 pacman hook（Omarchy 升级后重新打补丁；补丁打不上时在 play 末尾报错）；再装 systemd user timer `omarchy-cliproxy-usage.timer`，每 5 分钟 ssh 到 mac-mini-m2，从 stdin 运行 `cliproxy-usage-probe`，m2 只返回用量结果、不返回 token，写入 `~/.local/state/cliproxy/{claude,codex}-usage.json` 并刷新 Agents bar |
 | always-on | 常驻服务器配置：屏蔽五个 sleep target、在 Omarchy 菜单隐藏 Suspend、SDDM 自动重登（`/etc/sddm.conf.d/zz-relogin.conf`）、`/etc/sysctl.d/zz-always-on.conf`、移除旧的每周日 `omarchy-weekly-update` 重启检查（重启改由 `pacman` role 负责）、屏保延迟 86400 秒、sudoers 的 `verifypw=any` |
 
 ### 不移植的内容
 
 这些东西留在 mac-mini-2018-omarchy 上手工维护，记录在 `~/.agents/docs/fleet-ssh.md`，因为它们属于这一台机器而不是每台 Omarchy 主机：
 
-- **`~/.local/bin/*-gw` 包装器**和各 agent 的网关 settings：由 mac-mini-m2 上的 `cliproxy-tier-host.py` 写入。本仓库**从不**写这些文件。`/usr/bin/omarchy-agent` 的补丁归 `omarchy-cliproxy` role。
+- **`~/.local/bin` 里的 `copilot`、`gemini` shim 和 `*-origin` 包装器**，以及各 agent 的网关 settings：由 mac-mini-m2 上的 `cliproxy-tier-host.py` 写入。本仓库**从不**写这些文件。`/usr/bin/omarchy-agent` 的补丁归 `omarchy-cliproxy` role。
 - **arch-mact2** 的 pre-refresh hook（只有 T2 硬件需要）。
 - **Sunshine**：Omarchy 的安装器有 bug，unit、web app 和 ufw 规则是手工做的一次性工作。
 
@@ -179,11 +179,11 @@ macbook-provision 里没有移植的 role：`host-facts`、`shell`、`omarchy`�
 | copilot | mise `copilot`（aqua） | stub `~/.local/bin/copilot` |
 | crush | mise `crush`（aqua） | stub `~/.local/bin/crush` |
 | gemini | mise `gemini`（npm） | stub `~/.local/bin/gemini` |
-| grok | mise `npm:@xai-official/grok` | stub `~/.local/bin/grok`；首次运行时原生二进制下载到 `~/.grok/bin`；经网关用 `grok-gw` |
+| grok | mise `npm:@xai-official/grok` | stub `~/.local/bin/grok`；首次运行时原生二进制下载到 `~/.grok/bin`；默认经网关 |
 | openclaw | `omarchy-install-openclaw-cli`（pacman `openclaw`） | `/usr/bin/openclaw` |
 | dsh | mise `npm:@deepseek-ai/dsh`（加 `pnpm`） | stub `~/.local/bin/dsh`；插件在 `~/.dsh/profiles/<profile>/` |
 | hermes | `omarchy-install-hermes-cli`（mise pipx） | `~/.local/bin/hermes` |
-| agent-reach | **没有包管理器**，见下 | 由 `claude-gw -p` 按上游文档安装 |
+| agent-reach | **没有包管理器**，见下 | 由 `claude -p` 按上游文档安装 |
 
 stub 是 `omarchy-mise-install` 写的那种：先 `mise use -g`、再 `mise x`，第一次调用时装好工具。**升级统一由 `mise` role 的一次 `mise up` 完成**，各工具 role 没有自己的 update 步骤。
 
@@ -214,7 +214,7 @@ Omarchy 支持的 agent 里，**Cursor CLI 和 Muse Code 不装**：前者的模
 
 - **Codex 的 hook 信任**是一次性的、每台机器各做一次：跑 `codex`、打开 `/hooks`，审核并信任 ponytail 的三个生命周期 hook，然后开一个新 thread。
 - **opencode 的 provider 认证**没有做：安装器带的是 `--skip-auth`。
-- **新装的 agent 要在 m2 上跑一次 `cliproxy-tier <host>`。** `copilot-gw`、`gemini-gw`、`grok-gw`、`kimi-gw`、crush、openclaw 的网关配置以及 OpenClaw 的 onboarding 都由它完成，而它只处理已经装好的 agent。
+- **新装的 agent 要在 m2 上跑一次 `cliproxy-tier <host>`。** claude、codex、kimi、gemini、copilot、grok（含 `*-origin` 包装器）、crush、openclaw 的网关配置以及 OpenClaw 的 onboarding 都由它完成，而它只处理已经装好的 agent。
 - **rename 钩子装上或更新后**，Codex 下次启动会问是否信任这个钩子，选「Trust all and continue」；已经在跑的 Claude Code 会话要打开一次 `/hooks` 或重启才会用上。
 - **agent-reach 只配好了零配置的渠道。** 其余渠道要 cookie 或点一下浏览器扩展。要补齐就自己交互式跑一次 `agent-reach doctor`。
 - **paseo 的配对**：`paseo daemon pair`。

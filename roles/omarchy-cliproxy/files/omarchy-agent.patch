@@ -4,9 +4,9 @@
  
  # Agents launched from the keybinding or menu run unattended, so each one starts
  # with its own spelling of "don't stop to ask". Pi has no approval prompts.
-+# CLIProxyAPI (coding-agent Q374): this host has no vendor logins, so Claude,
-+# Codex, Copilot and Gemini start through their *-gw wrappers, which already run
-+# without approval prompts. Cursor and Muse have no gateway route.
++# CLIProxyAPI (coding-agent Q374, Q665): this host has no vendor logins. Claude,
++# Codex, Copilot and Gemini start plain: cliproxy-tier's settings and shims already
++# run them through the gateway, without approval prompts. Cursor and Muse have no gateway route.
  case "$agent" in
  opencode)
    command=(opencode --auto)
@@ -14,12 +14,12 @@
    ;;
  gemini)
 -  command=(gemini --yolo)
-+  command=(gemini-gw)
++  command=(gemini)
    [[ -n ${prompt:-} ]] && command+=(--prompt-interactive "$prompt")
    ;;
  copilot)
 -  command=(copilot --allow-all)
-+  command=(copilot-gw)
++  command=(copilot)
    [[ -n ${prompt:-} ]] && command+=(--interactive "$prompt")
    ;;
  crush)
@@ -28,7 +28,7 @@
    ;;
  claude)
 -  command=(claude --permission-mode auto)
-+  command=(claude-gw)
++  command=(claude)
    [[ -n ${prompt:-} ]] && command+=(-- "$prompt")
    ;;
  grok)
@@ -37,7 +37,7 @@
    ;;
  codex)
 -  command=(codex --approve-for-me)
-+  command=(codex-gw)
++  command=(codex)
    [[ -n ${prompt:-} ]] && command+=(-- "$prompt")
    ;;
  cursor-agent)
