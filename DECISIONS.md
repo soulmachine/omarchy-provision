@@ -467,3 +467,13 @@
 **Justification:** The user asked for the early return, and the provisioning repos stay in sync (`~/.agents/AGENTS.md`). The cost is the same as on the Macs: key-expiry now runs only on a run that starts offline, in practice the enrolment run. Linted only; this change has not run on a Linux host.
 **Outcome:** applied
 **Ref:** macbook-provision Q295
+
+## Q47 — interactive/tailscale-extras-marker — deviation
+
+**Question:** Omarchy's extras (operator, Taildrop, bar plugin, web app) ran only when the package was missing at the start of the play, so a host enrolled by hand never got them. With the Q46 early return, a re-run on such a host now ended before the extras. How should the role know whether the extras are in place?
+**Options considered:** keep the package-missing gate / stat `~/.local/share/applications/Tailscale.desktop`, the web app that is the installer's last step / check each extra (systemd unit, plugin, desktop file) separately
+**Chosen:** Stat the web-app launcher. The early return now needs Running AND that file. Enrolment is guarded on "not running" again, because a Running node without the extras now continues. The extras block runs whenever the file is missing, and the `pacman -Q tailscale` check it used is gone.
+**Decided-by:** human
+**Justification:** The user asked for the fix. The installer has no `set -e` and its exit code is the web-app install's, so the launcher shows that the script ran to the end. One stat is enough to say whether to re-run the whole idempotent script. Cost: a user who deletes the web app by hand gets it back on the next play. Verified on mac-mini-2018-omarchy in check mode: with the file present, the role ends after the probes; with the path pointed at a missing file, it skips `tailscale up` and reaches the installer. ubuntu- and macbook-provision have no Omarchy extras, so nothing to sync.
+**Outcome:** applied
+**Ref:** Q46; macbook-provision Q295

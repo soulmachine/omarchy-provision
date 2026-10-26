@@ -4,11 +4,13 @@
 Tailscale SSH; standard OpenSSH handles remote shells. That is why there is no `--ssh` flag, no tag
 advertisement and no ACL `tagOwners` management.
 
-- **An online node ends the role at once.** The first task runs `tailscale status --json`. On rc 0
-  with `BackendState: Running`, `meta: end_role` skips everything below: the package, the service, Omarchy's extras, `tailscale up`
-  and key-expiry. Key-expiry therefore runs only on a run that starts offline, in practice the
-  enrolment run. To re-apply it on an online node, run the API calls by hand or `tailscale down`
-  first. Same as macbook-provision Q295.
+- **An online node with its extras ends the role at once.** The first tasks run
+  `tailscale status --json` and stat `~/.local/share/applications/Tailscale.desktop`, the web app
+  that is the installer's last step. On rc 0 with `BackendState: Running` and that file present,
+  `meta: end_role` skips everything below: the package, the service, `tailscale up`, the extras and
+  key-expiry. Key-expiry therefore runs only on a run that starts offline or without the extras, in
+  practice the enrolment run. To re-apply it on an online node, run the API calls by hand or
+  `tailscale down` first. Same as macbook-provision Q295.
 - **Omarchy owns the install.** `omarchy-install-service-tailscale` installs the package, enables
   `tailscaled`, runs `tailscale up`, sets `--operator=$USER`, enables Taildrop receiving into
   `~/Downloads`, adds the bar plugin and the admin-console web app. Its `tailscale up` carries no
@@ -17,8 +19,9 @@ advertisement and no ACL `tagOwners` management.
   `tailscaled`, enrols the node with `TAILSCALE_AUTH_KEY`, and only then runs Omarchy's installer
   for the extras. There the installer's own `tailscale up --accept-routes` is refused at once for not
   restating `--operator` (the script does not stop on it) and the rest of the script runs. Without
-  an auth key on such a host, the role fails at the gate with the remedy rather than hang. On a host
-  that already has the package, as the first Omarchy box did, the installer is never called.
+  an auth key on such a host, the role reports the hand-run `tailscale up` and goes on rather than
+  hang. The installer runs on any play that finds the web app missing and the node Running, so a
+  host enrolled by hand gets the extras on its next play.
 - **Auto-login when `TAILSCALE_AUTH_KEY` is set.** The role runs `tailscale up --accept-dns
   --accept-routes --operator=$USER --auth-key=...` under `become: true`, skipped when the node is
   already `BackendState: Running`. `tailscale up` rejects a call that drops a previously set

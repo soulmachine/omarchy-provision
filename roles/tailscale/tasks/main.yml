@@ -10,9 +10,8 @@
 # Without an auth key the package is installed and the enrolment is left to a hand-run
 # `tailscale up`, as on the Macs; the extras then follow on the next play.
 
-# A node that answers `BackendState: Running` already has the package, the service and
-# its enrolment, so every task below would be a no-op. Omarchy's extras need no check
-# either: they run only when the package was missing, and then the node cannot be Running.
+# A node that answers `BackendState: Running` and has Omarchy's extras already has the
+# package, the service, its enrolment and the extras, so every task below would be a no-op.
 - name: Read the current Tailscale state
   ansible.builtin.command: tailscale status --json
   register: _tailscale_status
@@ -20,16 +19,22 @@
   failed_when: false # a missing package or a stopped daemon means "not online"; the tasks below handle it
   check_mode: false # read-only probe; run in --check so the early return below sees real state
 
-- name: Stop here when this node is already online
-  ansible.builtin.meta: end_role
-  when: _tailscale_status.rc == 0 and (_tailscale_status.stdout | from_json).BackendState == 'Running'
+# The web app is the installer's last step, so its launcher marks a run that finished.
+- name: Check whether Omarchy's Tailscale extras are installed
+  ansible.builtin.stat:
+    path: ~/.local/share/applications/Tailscale.desktop
+  register: _tailscale_extras
+  check_mode: false # read-only probe; run in --check so the early return below sees real state
 
-- name: Check whether Tailscale is installed
-  ansible.builtin.command: pacman -Q tailscale
-  register: tailscale_pkg
-  changed_when: false
-  failed_when: false
-  check_mode: false
+- name: Decide whether the node is already on the tailnet
+  ansible.builtin.set_fact:
+    tailscale_running: >-
+      {{ _tailscale_status.rc == 0
+         and (_tailscale_status.stdout | from_json).BackendState == 'Running' }}
+
+- name: Stop here when this node is already online and has Omarchy's extras
+  ansible.builtin.meta: end_role
+  when: tailscale_running | bool and _tailscale_extras.stat.exists
 
 # ─── Credentials ──────────────────────────────────────────────────────────────
 # Two independent credentials that are NOT interchangeable, and each gates a
@@ -104,9 +109,9 @@
 
 # ─── Node enrolment ───────────────────────────────────────────────────────────
 - name: Auto-connect to tailnet when auth key is provided
-  when: tailscale_auth_key | length > 0
+  # A running node reaches this point only when its extras are missing.
+  when: tailscale_auth_key | length > 0 and not (tailscale_running | bool)
   block:
-    # No state check here: the early return at the top already ended the role on a running node.
     - name: Remind user that admin approval may be required
       ansible.builtin.debug:
         msg: |
@@ -139,13 +144,13 @@
       no_log: true
       changed_when: true
 
-# Omarchy's extras, once, on the host this run installed the package on. Gated on the node
-# being Running so the installer's own `tailscale up` cannot wait for a browser; there it
-# exits 1 for not restating `--operator`, which the script does not stop on. Its exit code
-# is that of its last command, the web-app install, so a failure there is reported, not
-# fatal: the node is up either way.
+# Omarchy's extras, on any run that finds their web app missing: the first run, or a later one
+# on a host enrolled by hand. Gated on the node being Running so the installer's own
+# `tailscale up` cannot wait for a browser; there it exits 1 for not restating `--operator`,
+# which the script does not stop on. Its exit code is that of its last command, the web-app
+# install, so a failure there is reported, not fatal: the node is up either way.
 - name: Finish with Omarchy's Tailscale installer
-  when: tailscale_pkg.rc != 0
+  when: not _tailscale_extras.stat.exists
   block:
     - name: Read whether the node is on the tailnet
       ansible.builtin.command: tailscale status --json
