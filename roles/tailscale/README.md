@@ -4,6 +4,11 @@
 Tailscale SSH; standard OpenSSH handles remote shells. That is why there is no `--ssh` flag, no tag
 advertisement and no ACL `tagOwners` management.
 
+- **An online node ends the role at once.** The first task runs `tailscale status --json`. On rc 0
+  with `BackendState: Running`, `meta: end_role` skips everything below: the package, the service, Omarchy's extras, `tailscale up`
+  and key-expiry. Key-expiry therefore runs only on a run that starts offline, in practice the
+  enrolment run. To re-apply it on an online node, run the API calls by hand or `tailscale down`
+  first. Same as macbook-provision Q295.
 - **Omarchy owns the install.** `omarchy-install-service-tailscale` installs the package, enables
   `tailscaled`, runs `tailscale up`, sets `--operator=$USER`, enables Taildrop receiving into
   `~/Downloads`, adds the bar plugin and the admin-console web app. Its `tailscale up` carries no

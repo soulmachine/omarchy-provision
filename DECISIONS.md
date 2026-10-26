@@ -457,3 +457,13 @@
 **Justification:** The two files are owned by the `omarchy` package in `/usr/bin`, so a one-off edit would be lost at the next upgrade, which happens during the very run that reaches the prompts. The hook pattern is already proven here by `95-omarchy-cliproxy-usage.hook`. Stock interactive behavior is unchanged: without the variable both prompts still ask.
 **Outcome:** applied
 **Ref:** coding-agent Q488, Q589; roles/pacman/tasks/unattended.yml
+
+## Q46 — interactive/tailscale-early-return — deviation
+
+**Question:** macbook-provision Q295 ends the tailscale role at once when `tailscale status --json` reports `BackendState: Running`. Port it?
+**Options considered:** port the early return / keep running the install and key-expiry steps on every play
+**Chosen:** Ported: the first task probes `tailscale status --json`, and rc 0 with `Running` runs `meta: end_role`, which skips the package, the service and Omarchy's extras, `tailscale up` and key-expiry. The enrolment block's own probe and its two `Running` conditions are gone.
+**Decided-by:** human
+**Justification:** The user asked for the early return, and the provisioning repos stay in sync (`~/.agents/AGENTS.md`). The cost is the same as on the Macs: key-expiry now runs only on a run that starts offline, in practice the enrolment run. Linted only; this change has not run on a Linux host.
+**Outcome:** applied
+**Ref:** macbook-provision Q295
