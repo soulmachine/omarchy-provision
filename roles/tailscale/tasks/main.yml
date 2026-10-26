@@ -159,12 +159,18 @@
       failed_when: false
       check_mode: false
 
+    # A fact rather than `tailscale_omarchy_install is skipped` below, because --check skips
+    # the installer on an enrolled node too.
+    - name: Decide whether the node is on the tailnet now
+      ansible.builtin.set_fact:
+        tailscale_running_after_up: >-
+          {{ tailscale_status_after_up.rc == 0
+             and (tailscale_status_after_up.stdout | from_json).BackendState == 'Running' }}
+
     - name: Add Omarchy's operator, Taildrop, bar plugin and web app
       ansible.builtin.command: omarchy-install-service-tailscale
       register: tailscale_omarchy_install
-      when: >-
-        tailscale_status_after_up.rc == 0
-        and (tailscale_status_after_up.stdout | from_json).BackendState == 'Running'
+      when: tailscale_running_after_up | bool
       changed_when: true
       failed_when: false
 
@@ -175,7 +181,7 @@
           is not set in .env. Run `sudo tailscale up --accept-dns --accept-routes
           --operator=$USER` and sign in at the URL it prints, then re-run this role for
           Omarchy's bar plugin and web app.
-      when: tailscale_omarchy_install is skipped
+      when: not (tailscale_running_after_up | bool)
 
     - name: Report that Omarchy's Tailscale installer did not finish cleanly
       ansible.builtin.debug:
