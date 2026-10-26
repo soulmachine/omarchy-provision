@@ -116,7 +116,7 @@ pre-commit run --all-files
 | 1password | 1Password 桌面 App 与官方 CLI `op`：pacman `1password-cli`（来自 Omarchy 自己的 `omarchy` 仓库）；有桌面会话时用 `omarchy-install-service-1password` 装 App，它同时装 1Password 的 Chromium 扩展；由 `omarchy-update` 升级；再装官方 Claude Code 插件 [`1password@1password`](https://github.com/1Password/1password-claude-plugin)；App 的 Settings → Developer 中「Integrate with 1Password CLI」与「Integrate with MCP clients」两个开关和登录需手动（依赖 claude-code） |
 | bitwarden | Bitwarden 客户端（用于自建的 Vaultwarden），pacman `rbw`、mise `npm:@bitwarden/cli`（stub `~/.local/bin/bw`；pacman 的 `bitwarden-cli` 依赖 `nodejs-lts-jod`，与 Omarchy 的 `nodejs` 冲突）；有桌面会话（`/usr/share/xsessions` 或 `/usr/share/wayland-sessions` 下有 `.desktop`，Hyprland 自带）时再装官方 Electron 桌面 App（pacman `bitwarden`）；由 `omarchy-update` 升级；再把 `bw` 的 server 与 `rbw` 的 `base_url`/`email` 设为 `https://vaultwarden.soulmachine.me` 与 `soulmachine@gmail.com`（先读、不同才写）；桌面 App 的服务器与所有登录仍需手动（依赖 nodejs） |
 | codex | OpenAI Codex CLI（Omarchy 的 mise 工具 `codex`）（依赖 nodejs） |
-| opencode | OpenCode CLI（Omarchy 的 mise 工具 `opencode`）；并用 `npx oh-my-openagent` 写入 `~/.config/opencode/opencode.json`，由版本戳门控，避免每次 play 重装（依赖 nodejs） |
+| opencode | OpenCode CLI（Omarchy 的 mise 工具 `opencode`，依赖 nodejs） |
 | omp | oh-my-pi（Omarchy 的 mise 工具，命令 `omp`） |
 | pi | pi coding agent（Omarchy 的 mise 工具 `pi`），并下发 `~/.pi/agent/settings.json` |
 | copilot | GitHub Copilot CLI（Omarchy 的 mise 工具 `copilot`）；走网关用的 `copilot-gw` 由 m2 上的 `cliproxy-tier` 写入 |
@@ -192,8 +192,6 @@ Omarchy 支持的 agent 里，**Cursor CLI 和 Muse Code 不装**：前者的模
 #### 每次运行都会被覆盖的配置文件
 
 **`~/.pi/agent/settings.json` 每次 play 都会被仓库里的版本整个覆盖。** `pi` role 用 `copy` 下发整个 `~/.pi/agent/` 目录，没有任何 gate，所以在 pi 里通过 `/settings` 改的东西会在下一次 provisioning 时被抹掉。要让改动活下来，得改 `roles/pi/files/agent/` 里的文件。这是一次**合并**而不是同步：`~/.pi/agent/` 下面没被 payload 覆盖到的东西（尤其是 `skills` role 维护的 `~/.pi/agent/skills/`）不受影响。
-
-另一处是 `~/.config/opencode/opencode.json`，由 `npx oh-my-openagent` 重写。这一步有 gate：配置里没有 `oh-my-openagent` 字样，或者 npm 上的版本与 `~/.config/opencode/.oh-my-openagent-version` 记录的不一致时才跑。
 
 #### 技能：一个存储 + 符号链接扇出
 
