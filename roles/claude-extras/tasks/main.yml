@@ -20,6 +20,18 @@
     mise_cmd: cux
     mise_opts: allow_low_downloads=true
 
+# backpass, which reviews past Claude sessions (`backpass-gw` runs it through the gateway). A Node
+# reinstall dropped it on mac-mini-m6 (2026-10-26). It had 0 weekly downloads that day, hence
+# allow_low_downloads, as for cux.
+- name: Ensure backpass is installed through mise
+  ansible.builtin.include_role:
+    name: mise
+    tasks_from: tool
+  vars:
+    mise_tool: "npm:backpass"
+    mise_cmd: backpass
+    mise_opts: allow_low_downloads=true
+
 # claude-swap ships two entrypoints, `claude-swap` and the short `cswap`.
 #
 # `<pkg>@latest`, not a bare `uv tool install <pkg>`: the bare form no-ops with
