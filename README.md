@@ -140,6 +140,7 @@ pre-commit run --all-files
 | ghostty | 终端模拟器：`omarchy-install-terminal ghostty`，同时把它设为 Omarchy 的默认终端（取代 foot） |
 | obsidian | Obsidian（pacman，Omarchy 自带）+ mise `npm:defuddle`（依赖 claude-code） |
 | cloudflare | Cloudflare CLI：Omarchy 的 mise 工具 `npm:cf`（依赖 claude-code） |
+| godaddy | GoDaddy 官方 CLI `gddy`（上游 install.sh 校验 sha256 后装入 `~/.local/bin`，按 `gddy update apply` 返回的 previousVersion/newVersion 差异更新）+ 官方 Claude Code 插件 [`gddy@godaddy`](https://github.com/godaddy/cli)（依赖 claude-code） |
 | multica-cli | 官方安装脚本，同 ubuntu-provision |
 | purelymail | 同 ubuntu-provision；token 手工放在 `~/.profile`，`~/.bash_profile` 已加一行 source 它 |
 | email | Himalaya 邮件 CLI 与 Proton Mail Bridge（pacman）+ ortie OAuth CLI（GitHub release 二进制，同 ubuntu-provision）；账号配置手工完成 |
