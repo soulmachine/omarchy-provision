@@ -25,7 +25,7 @@ servers run it. Omarchy does not install kimi-code (Q10), so there is no kimi ha
     `openclaw plugins update`.
   - Gemini CLI: no installer, so the role edits its config file (next bullets).
 - **The pi package entry lives in `roles/pi/files/settings.json`.** The pi role installs and
-  refreshes every npm package listed there, `npm:context-mode` included, so this role has no pi
+  refreshes every package listed there, `npm:context-mode` included, so this role has no pi
   task. pi needs no `mcp.json`: the extension registers the tools through its own MCP bridge.
 - **Gemini CLI: one merge into `~/.gemini/settings.json`.** The merge adds the `mcpServers` entry
   and appends the four upstream hooks to the existing hook lists (`list_merge='append_rp'`), so
