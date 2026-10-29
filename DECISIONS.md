@@ -498,3 +498,13 @@
 **Outcome:** applied
 **Ref:** roles/claude-extras/tasks/main.yml, roles/nodejs/tasks/main.yml (this commit)
 **Supersedes:** Q48 — its assumption was wrong when tested
+
+## Q50 — interactive/mise-npm-install-scripts — deviation
+
+**Question:** mise runs no install scripts for npm tools (Q49). Besides cux, which mise npm tools on this box break because of it?
+**Options considered:** fix only cux / check every `npm:` tool and fix each one that fails
+**Chosen:** Checked all 12. Only grok was wrong: `allow_builds=@xai-official/grok` on the grok role, and on mac-mini-2018-omarchy the option was written by hand with `mise install --force`. grok now runs 1.0.70.
+**Decided-by:** agent
+**Justification:** On 2026-10-29 every `npm:` tool's current version was run, and its package tree was scanned for install scripts. bw, dsh, paseo, playwright-cli, backpass, cf, defuddle, mcporter and playwright have no scripts, or run without them. context-mode skips its scripts, but `context-mode doctor` passes storage and server (as macbook-provision Q251 found on macOS). grok's package said 1.0.70, but `grok` ran 1.0.50 from 2026-10-11: its launcher always runs `~/.grok/bin/grok` once it exists, and only the skipped postinstall moves that file. In a throwaway mise data dir with a temp `GROK_HOME` holding an older binary, the install without `allow_builds` kept running it, and with the option it ran 1.0.70. The old `~/.grok/bin/grok-1.0.50` (about 180 MB) was left in place.
+**Outcome:** applied
+**Ref:** roles/grok/tasks/main.yml (this commit); macbook-provision Q305

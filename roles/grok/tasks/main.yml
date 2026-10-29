@@ -1,9 +1,12 @@
 ---
 # Grok CLI (xAI) is Omarchy's mise tool `npm:@xai-official/grok` with its ~/.local/bin/grok
 # stub; the mise role's `mise up` keeps it current. The npm package is a launcher: the first
-# `grok` call downloads the native binary into ~/.grok/bin. `cliproxy-tier <host>` on
+# `grok` call copies the native binary into ~/.grok/bin. `cliproxy-tier <host>` on
 # mac-mini-m2 puts the gateway models in ~/.grok and writes `grok-origin` with its home ~/.grok-origin
 # (~/coding-agent/devops/cliproxyapi/gateway-policy.md).
+# allow_builds: once ~/.grok/bin/grok exists the launcher always runs it, and only the package's
+# postinstall moves it to a new version. mise runs no install scripts without this, so grok stayed
+# at 1.0.50 while mise showed 1.0.70 (DECISIONS Q50).
 - name: Ensure Grok CLI is installed through mise
   ansible.builtin.include_role:
     name: mise
@@ -12,3 +15,4 @@
     mise_tool: "npm:@xai-official/grok"
     mise_cmd: grok
     mise_bin: grok
+    mise_opts: allow_builds=@xai-official/grok
