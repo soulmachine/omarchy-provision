@@ -8,16 +8,3 @@
     tasks_from: tool
   vars:
     mise_tool: node
-
-# npm 12 skips dependency install scripts unless allowed, and a global install reads the user's
-# `allow-scripts`; mise's npm backend runs npm, so it should too (untested). @inulute/cux
-# (claude-extras) downloads its binary in postinstall and fails without it. opencode comes from
-# mise here, not npm, so it is not listed (DECISIONS Q48, macbook-provision Q303). 0600 because
-# `npm login` puts the registry token in the same file.
-- name: Allow the install scripts that npm globals need under npm 12
-  ansible.builtin.lineinfile:
-    path: "{{ lookup('env', 'HOME') }}/.npmrc"
-    regexp: '^allow-scripts='
-    line: allow-scripts=@inulute/cux
-    create: true
-    mode: "0600"

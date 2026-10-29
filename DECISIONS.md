@@ -487,3 +487,14 @@
 **Justification:** macbook-provision Q303 measured which globals break under npm 12. Here opencode is a mise tool, not an npm package, so only cux (mise `npm:@inulute/cux`) needs its postinstall. Not tested on Omarchy, and it assumes mise's npm backend reads the user `~/.npmrc`.
 **Outcome:** assumed
 **Ref:** roles/nodejs/tasks/main.yml (this commit); macbook-provision Q303
+
+## Q49 — interactive/npm12-allow-scripts — deviation
+
+**Question:** Q48 assumed that mise's npm backend reads `allow-scripts` from `~/.npmrc`. Tested on this box on 2026-10-29, it does not. How should cux get its install script?
+**Options considered:** keep the `~/.npmrc` line / tool option `allow_builds=@inulute/cux` / `allow_builds=true`
+**Chosen:** `mise_opts: allow_low_downloads=true,allow_builds=@inulute/cux` on cux in claude-extras, and the `~/.npmrc` task removed from the nodejs role. On mac-mini-2018-omarchy, cux was fixed by hand with `mise use -g` on the new options and `mise install --force`, because the mise tool task skips a tool that is already installed.
+**Decided-by:** agent
+**Justification:** mise installs npm tools with its embedded aube by default, and with npm it adds `--ignore-scripts=true` itself. Either way it runs no install scripts until a tool sets `allow_builds` (mise docs, npm backend, "Build scripts"). The live cux on this box had never worked: it printed "Postinstall may have failed". In a throwaway mise data dir, the `~/.npmrc` line left cux broken, and `allow_builds=@inulute/cux` made it run (`cux 0.4.1`). The narrow form was chosen over `true` because it approves one package's script, not the whole tree's. No role here installs with plain npm, so the `~/.npmrc` line did nothing.
+**Outcome:** applied
+**Ref:** roles/claude-extras/tasks/main.yml, roles/nodejs/tasks/main.yml (this commit)
+**Supersedes:** Q48 — its assumption was wrong when tested

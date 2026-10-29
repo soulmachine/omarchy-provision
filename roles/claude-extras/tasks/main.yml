@@ -11,6 +11,8 @@
 # allow_low_downloads: mise's npm installer refuses a package under 1000 weekly downloads,
 # and cux has 57 (measured 2026-10-11). The Macs install the same package with npm
 # (DECISIONS Q7).
+# allow_builds: mise runs no install scripts by default, and cux downloads its binary in
+# postinstall, so without this `cux` only prints "Postinstall may have failed" (DECISIONS Q49).
 - name: Ensure cux is installed through mise
   ansible.builtin.include_role:
     name: mise
@@ -18,7 +20,7 @@
   vars:
     mise_tool: "npm:@inulute/cux"
     mise_cmd: cux
-    mise_opts: allow_low_downloads=true
+    mise_opts: allow_low_downloads=true,allow_builds=@inulute/cux
 
 # backpass, which reviews past Claude sessions (`backpass-gw` runs it through the gateway). A Node
 # reinstall dropped it on mac-mini-m6 (2026-10-26). It had 0 weekly downloads that day, hence
