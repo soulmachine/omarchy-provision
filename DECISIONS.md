@@ -477,3 +477,13 @@
 **Justification:** The user asked for the fix. The installer has no `set -e` and its exit code is the web-app install's, so the launcher shows that the script ran to the end. One stat is enough to say whether to re-run the whole idempotent script. Cost: a user who deletes the web app by hand gets it back on the next play. Verified on mac-mini-2018-omarchy in check mode: with the file present, the role ends after the probes; with the path pointed at a missing file, it skips `tailscale up` and reaches the installer. ubuntu- and macbook-provision have no Omarchy extras, so nothing to sync.
 **Outcome:** applied
 **Ref:** Q46; macbook-provision Q295
+
+## Q48 — interactive/npm12-allow-scripts — tradeoff
+
+**Question:** npm 12 stops running dependency install scripts unless allowed. Which npm globals should this box allow?
+**Options considered:** the Mac list (`opencode-ai`, `@inulute/cux`) / only what this box installs through npm
+**Chosen:** Only `@inulute/cux`: the nodejs role writes `allow-scripts=@inulute/cux` to `~/.npmrc`.
+**Decided-by:** agent
+**Justification:** macbook-provision Q303 measured which globals break under npm 12. Here opencode is a mise tool, not an npm package, so only cux (mise `npm:@inulute/cux`) needs its postinstall. Not tested on Omarchy, and it assumes mise's npm backend reads the user `~/.npmrc`.
+**Outcome:** assumed
+**Ref:** roles/nodejs/tasks/main.yml (this commit); macbook-provision Q303
