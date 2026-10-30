@@ -19,7 +19,8 @@
   check_mode: false
 
 - name: Remove the mise tool npm:cf
-  ansible.builtin.command: mise unuse -g --quiet npm:cf
+  # unuse drops the config entry but keeps the installs, and `mise ls` lists any installed tool.
+  ansible.builtin.shell: mise unuse -g --quiet npm:cf && mise uninstall --all --quiet npm:cf
   when: "'npm:cf' in (cloudflare_mise_ls.stdout | from_json)"
   changed_when: true
 
