@@ -139,7 +139,7 @@ pre-commit run --all-files
 | orca | [Orca](https://onorca.dev)（多 agent IDE）：AUR `stably-orca-bin`（`pacman -Q` 探测，缺失时 `yay -S --needed --noconfirm`，由 `omarchy-update` 升级；包把 AppImage 解到 `/opt/stably-orca`，CLI 是 `/opt/stably-orca/resources/bin/orca-ide`，不在 PATH 上）；再用上游的 `orca-ide serve service install --port 6768` 装 systemd user unit `orca-serve`（`--supervise --no-pairing`），只在服务不是 `live` 时安装；当前 Orca 还没有这个子命令时跳过并提示；服务未 live 时在 play 末尾报错。配对仍需手动；tag `agent-multiplexer`（依赖 claude-code、codex） |
 | ghostty | 终端模拟器：`omarchy-install-terminal ghostty`，同时把它设为 Omarchy 的默认终端（取代 foot） |
 | obsidian | Obsidian（pacman，Omarchy 自带）+ mise `npm:defuddle`（依赖 claude-code） |
-| cloudflare | Cloudflare CLI：Omarchy 的 mise 工具 `npm:cf`（依赖 claude-code） |
+| cloudflare | Cloudflare CLI：npm 全局包 `cf`（`become`，pacman 的 node 全局前缀在 `/usr`）；移除旧的 mise 工具 `npm:cf` 和它在 `~/.local/bin` 的 stub（mise 的 latest 跳过预发布版，停在旧包 0.15.0，见 DECISIONS Q51）（依赖 claude-code） |
 | godaddy | GoDaddy 官方 CLI `gddy`（上游 install.sh 校验 sha256 后装入 `~/.local/bin`，按 `gddy update apply` 返回的 previousVersion/newVersion 差异更新）+ 官方 Claude Code 插件 [`gddy@godaddy`](https://github.com/godaddy/cli)（依赖 claude-code） |
 | multica-cli | 官方安装脚本，同 ubuntu-provision |
 | purelymail | 同 ubuntu-provision；token 手工放在 `~/.profile`，`~/.bash_profile` 已加一行 source 它 |

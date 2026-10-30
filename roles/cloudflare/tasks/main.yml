@@ -1,13 +1,32 @@
 ---
 # cf — Cloudflare's CLI. https://blog.cloudflare.com/cf-cli-local-explorer/
-# Omarchy's own mise tool; this adds the stub where Omarchy left only the mise entry.
-- name: Ensure the cf CLI is installed through mise
-  ansible.builtin.include_role:
-    name: mise
-    tasks_from: tool
-  vars:
-    mise_tool: "npm:cf"
-    mise_cmd: cf
+# An npm global like the Macs and Ubuntu, not a mise tool: mise's "latest" skips prereleases and
+# pins npm:cf to 0.15.0, the package's pre-Cloudflare owner, while every Cloudflare release is a
+# 1.0.0 beta (DECISIONS.md Q51). become, because pacman's node has its global prefix in /usr.
+- name: Install cf CLI
+  community.general.npm:
+    name: cf
+    global: true
+    state: latest
+  become: true
+
+# Retire the old mise copy: its config entry, its installs, and the ~/.local/bin stub, which comes
+# before /usr/bin on PATH and would keep running 0.15.0.
+- name: Read the mise tools
+  ansible.builtin.command: mise ls --json
+  register: cloudflare_mise_ls
+  changed_when: false
+  check_mode: false
+
+- name: Remove the mise tool npm:cf
+  ansible.builtin.command: mise unuse -g --quiet npm:cf
+  when: "'npm:cf' in (cloudflare_mise_ls.stdout | from_json)"
+  changed_when: true
+
+- name: Remove the mise stub for cf
+  ansible.builtin.file:
+    path: "{{ lookup('env', 'HOME') }}/.local/bin/cf"
+    state: absent
 
 # The Cloudflare skills are installed by the `skills` role, which lists
 # cloudflare/skills in skills_sources and re-fetches it every play. They lived here

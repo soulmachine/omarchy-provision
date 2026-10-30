@@ -508,3 +508,13 @@
 **Justification:** On 2026-10-29 every `npm:` tool's current version was run, and its package tree was scanned for install scripts. bw, dsh, paseo, playwright-cli, backpass, cf, defuddle, mcporter and playwright have no scripts, or run without them. context-mode skips its scripts, but `context-mode doctor` passes storage and server (as macbook-provision Q251 found on macOS). grok's package said 1.0.70, but `grok` ran 1.0.50 from 2026-10-11: its launcher always runs `~/.grok/bin/grok` once it exists, and only the skipped postinstall moves that file. In a throwaway mise data dir with a temp `GROK_HOME` holding an older binary, the install without `allow_builds` kept running it, and with the option it ran 1.0.70. The old `~/.grok/bin/grok-1.0.50` (about 180 MB) was left in place.
 **Outcome:** applied
 **Ref:** roles/grok/tasks/main.yml (this commit); macbook-provision Q305
+
+## Q51 — interactive/cf-npm-global — deviation
+
+**Question:** mise resolves `npm:cf@latest` to 0.15.0, which is the old pre-Cloudflare package, because its "latest" skips prereleases and every Cloudflare release is a 1.0.0 beta. How should this box install cf?
+**Options considered:** npm global with `become`, as on the Macs and Ubuntu / keep mise and pin `npm:cf` to the `1.0.0-beta` prefix
+**Chosen:** An npm global through `community.general.npm` with `become: true`, because pacman's node has its global prefix in `/usr`. The role also runs `mise unuse -g npm:cf` and deletes the `~/.local/bin/cf` stub.
+**Decided-by:** human
+**Justification:** The user prefers one channel for cf on every host: an npm global, like the macbook-provision and ubuntu-provision cloudflare roles. The pin would need a version variable in `mise/tool.yml`, and it stops matching when cf ships 1.0.0 stable. On 2026-10-30, `mise latest npm:cf` on mac-mini-2018-omarchy printed 0.15.0, while npm's `latest` dist-tag was 1.0.0-beta.26. This is the first role here that installs with plain npm instead of mise.
+**Outcome:** applied
+**Ref:** roles/cloudflare/tasks/main.yml (this commit)
