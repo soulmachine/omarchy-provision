@@ -518,3 +518,13 @@
 **Justification:** The user prefers one channel for cf on every host: an npm global, like the macbook-provision and ubuntu-provision cloudflare roles. The pin would need a version variable in `mise/tool.yml`, and it stops matching when cf ships 1.0.0 stable. On 2026-10-30, `mise latest npm:cf` on mac-mini-2018-omarchy printed 0.15.0, while npm's `latest` dist-tag was 1.0.0-beta.26. This is the first role here that installs with plain npm instead of mise.
 **Outcome:** applied
 **Ref:** roles/cloudflare/tasks/main.yml (this commit)
+
+## Q52 — interactive/github-two-accounts — gate-resolution
+
+**Question:** macbook-provision grew optional secondary-GitHub-account wiring in its github role (its Q309, commits 049c2b4 and c2e5a9f, 2026-10-31). Port it now or wait for the next sync?
+**Options considered:** wait / port the two commits now
+**Chosen:** Ported now, verbatim except the journal references in secondary.yml now name macbook-provision explicitly: `roles/github/tasks/secondary.yml`, its include in `tasks/main.yml` (gated on `GITHUB_SECONDARY_EMAIL`), and the `GITHUB_SSH_KEY` + `GITHUB_SECONDARY_*` blocks in `.env.example` (GITHUB_SSH_KEY was undocumented here although the role already forwarded it).
+**Decided-by:** human
+**Justification:** Frank asked for the sync in-session (2026-10-31). No Omarchy host sets the variables yet, so the role's behavior is unchanged everywhere (the include skips); the wiring is OS-agnostic and the dotenv role dequotes values the same way as upstream's. Not runnable on the Mac that authored it: verified by ansible syntax check only, so the first host to set GITHUB_SECONDARY_* should run the github role standalone first.
+**Outcome:** applied
+**Ref:** (pending); macbook-provision Q307–Q309
