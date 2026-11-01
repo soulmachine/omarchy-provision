@@ -130,6 +130,7 @@ pre-commit run --all-files
 | agent-reach | 多渠道触达工具；上游只提供面向 AI agent 的安装文档，故由 `claude -p` 按文档驱动安装。`claude` 的网关配置（`~/.claude/settings.json`）由 mac-mini-m2 上的 `cliproxy-tier` 写入，缺失时 role 报错而**不自行创建**（依赖 claude-code、python） |
 | playwright | 浏览器自动化：mise `npm:playwright`（依赖 nodejs） |
 | playwright-cli | Playwright CLI：mise `npm:@playwright/cli`，并安装其 skill（依赖 playwright） |
+| agent-desktop | [agent-desktop](https://github.com/vercel-labs/agent-desktop)：agent 用的 computer use CLI，按 accessibility tree 观察并操作桌面 app；mise `npm:agent-desktop`，`allow_builds=agent-desktop` 让 mise 跑它的 postinstall（换上原生二进制），由 mise role 的 `mise up` 升级。Wayland 下需要 `at-spi2-core` 与 `wl-clipboard`，窗口控制只支持 X11（Q53，上游 Q310）（依赖 nodejs） |
 | hermes | Hermes 个人 agent（Nous Research）的 CLI 版：`omarchy-install-hermes-cli`（mise pipx）；`~/.hermes/SOUL.md` 链接到 `~/.agents/AGENTS.md` |
 | browseros-neo | [BrowserOS neo](https://browseros.com)（给 agent 用的 Chromium 浏览器）：pacman `fuse2`，下载上游 `https://cdn.browseros.com/download/BrowserOS_neo.AppImage` 到 `~/.local/share/browseros-neo/`（每次下载、内容变了才算变更），并写入启动器的 `.desktop`；把 MCP 端点 `http://127.0.0.1:9010/mcp`（neo 的 proxy 端口；文档里的 9200 不对）注册给每个已安装的 agent：Claude Code、codex、gemini、copilot、grok、hermes 用各自的 `mcp add`，kimi、omp、opencode、crush 合并进各自的 JSON 配置；URL 不对就替换（pi 不支持 MCP）；首次安装上游 `browseros-neo` skill，之后由运行中的 neo 自己更新。不开机自启（依赖 claude-code、nodejs） |
 | hindsight | 把每个 agent 接到 mac-mini-m2 上的 [Hindsight](https://github.com/vectorize-io/hindsight) 记忆服务（`~/coding-agent/devops/hindsight-server`）：URL 按 `ansible_hostname` 选（m2 用 loopback，同局域网用 `192.168.31.20`，远程主机用本地 `hindsight-relay`：先 Tailscale，不通再走 m2 的反向 SSH 隧道 `:18888`；同一 relay 的第二个实例在 `127.0.0.1:8317` 为 CLIProxyAPI 网关做同样的事，隧道 `:18317`，规则见 coding-agent `devops/service-access.md`），写进 `~/.hindsight/coding-agent.json`；token 由 m2 的 `push-token.sh` 推送；`npx @vectorize-io/hindsight-coding-agents install all` 只在版本落后或某 agent 没接上时跑；gemini、hermes、omp、crush 用运行时自带的 stdio MCP（依赖 nodejs） |
@@ -160,7 +161,7 @@ pre-commit run --all-files
 - **arch-mact2** 的 pre-refresh hook（只有 T2 硬件需要）。
 - **Sunshine**：Omarchy 的安装器有 bug，unit、web app 和 ufw 规则是手工做的一次性工作。
 
-macbook-provision 里没有移植的 role：`host-facts`、`shell`、`omarchy`（Omarchy 自身就是这三者）、`apple-container`、`cua`、`cmux`、`moshi`（没有 Linux 版）、`cc-switch`、`kimi-code`、`lcu`（需要 ChatGPT 桌面应用与 X11 桌面；Omarchy 是 Wayland，LCU 不支持，Q18）、`removemacai`（关闭 macOS 的 Apple Intelligence 等设置，Linux 没有对应物，上游 Q229，Q19）、`macos-connectors`（Apple 自带 App 的 CLI，上游 Q236，Q24）、`ego-browser`（Ego Lite 没有 Linux 版，上游 Q239，Q24）以及 `homebrew` 里的 Sublime Text（去掉：无头服务器用不上，2026-10-11 首次运行装上后又卸掉了）。OpenCLI（agent-reach 的 X 后备）也不装，见 `roles/agent-reach/README.md`。
+macbook-provision 里没有移植的 role：`host-facts`、`shell`、`omarchy`（Omarchy 自身就是这三者）、`apple-container`、`cua`、`cmux`、`moshi`（没有 Linux 版）、`cc-switch`、`kimi-code`、`removemacai`（关闭 macOS 的 Apple Intelligence 等设置，Linux 没有对应物，上游 Q229，Q19）、`macos-connectors`（Apple 自带 App 的 CLI，上游 Q236，Q24）、`ego-browser`（Ego Lite 没有 Linux 版，上游 Q239，Q24）以及 `homebrew` 里的 Sublime Text（去掉：无头服务器用不上，2026-10-11 首次运行装上后又卸掉了）。OpenCLI（agent-reach 的 X 后备）也不装，见 `roles/agent-reach/README.md`。
 
 ### Agent CLI 与技能
 
@@ -183,6 +184,7 @@ macbook-provision 里没有移植的 role：`host-facts`、`shell`、`omarchy`�
 | grok | mise `npm:@xai-official/grok` | stub `~/.local/bin/grok`；首次运行时原生二进制下载到 `~/.grok/bin`；默认经网关 |
 | openclaw | `omarchy-install-openclaw-cli`（pacman `openclaw`） | `/usr/bin/openclaw` |
 | dsh | mise `npm:@deepseek-ai/dsh`（加 `pnpm`） | stub `~/.local/bin/dsh`；插件在 `~/.dsh/profiles/<profile>/` |
+| agent-desktop | mise `npm:agent-desktop[allow_builds=agent-desktop]` | stub `~/.local/bin/agent-desktop` |
 | hermes | `omarchy-install-hermes-cli`（mise pipx） | `~/.local/bin/hermes` |
 | agent-reach | **没有包管理器**，见下 | 由 `claude -p` 按上游文档安装 |
 

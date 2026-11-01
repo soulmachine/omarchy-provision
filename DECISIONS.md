@@ -528,3 +528,13 @@
 **Justification:** Frank asked for the sync in-session (2026-10-31). No Omarchy host sets the variables yet, so the role's behavior is unchanged everywhere (the include skips); the wiring is OS-agnostic and the dotenv role dequotes values the same way as upstream's. Not runnable on the Mac that authored it: verified by ansible syntax check only, so the first host to set GITHUB_SECONDARY_* should run the github role standalone first.
 **Outcome:** applied
 **Ref:** (pending); macbook-provision Q307–Q309
+
+## Q53 — interactive/lcu-to-agent-desktop — deviation
+
+**Question:** macbook-provision Q310 retired lcu and installs agent-desktop with `npm install -g`. Which channel should agent-desktop use on Omarchy?
+**Options considered:** mise tool `npm:agent-desktop` with allow_builds (Omarchy's convention) / a real npm global with become (the cf precedent, Q51)
+**Chosen:** The mise tool `npm:agent-desktop[allow_builds=agent-desktop]` with its ~/.local/bin stub, through the mise role's `tool` include; `mise up` upgrades it. allow_builds, because its postinstall swaps the JS launcher for the native binary. lcu leaves the README list of unported roles, since upstream no longer has it.
+**Decided-by:** human
+**Justification:** Frank chose the mise channel when asked. cf went to npm only because mise's "latest" skips prereleases (Q51); agent-desktop's releases are not prereleases.
+**Outcome:** applied
+**Ref:** (pending)

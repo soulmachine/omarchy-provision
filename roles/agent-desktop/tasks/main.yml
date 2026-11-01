@@ -1,0 +1,14 @@
+---
+# agent-desktop (github.com/vercel-labs/agent-desktop): the computer-use fallback ~/.agents/AGENTS.md
+# names. Omarchy's mise tool with its ~/.local/bin stub, not the Macs' npm global (Q53); the mise
+# role's `mise up` keeps it current. allow_builds: its postinstall swaps the JS launcher for the
+# native binary, and mise runs no install scripts without it. On Wayland it needs at-spi2-core and
+# wl-clipboard, and window control is X11 only.
+- name: Ensure agent-desktop is installed through mise
+  ansible.builtin.include_role:
+    name: mise
+    tasks_from: tool
+  vars:
+    mise_tool: "npm:agent-desktop"
+    mise_cmd: agent-desktop
+    mise_opts: allow_builds=agent-desktop
