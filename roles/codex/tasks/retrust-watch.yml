@@ -18,7 +18,7 @@
 - name: Install the codex-plugin-retrust LaunchAgent
   ansible.builtin.template:
     src: codex-plugin-retrust.plist.j2
-    dest: "{{ lookup('env', 'HOME') }}/Library/LaunchAgents/me.soulmachine.codex-plugin-retrust.plist"
+    dest: "{{ codex_home | dirname }}/Library/LaunchAgents/me.soulmachine.codex-plugin-retrust.plist"
     mode: "0644"
   register: _codex_retrust_plist
   when: ansible_facts['system'] == 'Darwin'
@@ -36,7 +36,7 @@
   ansible.builtin.shell: >-
     {% if _codex_retrust_loaded.rc == 0 %}launchctl bootout gui/{{ ansible_facts['user_uid'] }}/me.soulmachine.codex-plugin-retrust;{% endif %}
     launchctl bootstrap gui/{{ ansible_facts['user_uid'] }}
-    {{ lookup('env', 'HOME') }}/Library/LaunchAgents/me.soulmachine.codex-plugin-retrust.plist
+    {{ codex_home | dirname }}/Library/LaunchAgents/me.soulmachine.codex-plugin-retrust.plist
   when:
     - ansible_facts['system'] == 'Darwin'
     - _codex_retrust_loaded.rc != 0 or _codex_retrust_plist.changed
@@ -45,7 +45,7 @@
 # --- Linux: a systemd user path unit (the user lingers, so it runs without a login) -------
 - name: Ensure the systemd user unit folder exists
   ansible.builtin.file:
-    path: "{{ lookup('env', 'HOME') }}/.config/systemd/user"
+    path: "{{ codex_home | dirname }}/.config/systemd/user"
     state: directory
     mode: "0755"
   when: ansible_facts['system'] == 'Linux'
@@ -53,7 +53,7 @@
 - name: Install the codex-plugin-retrust systemd units
   ansible.builtin.template:
     src: "codex-plugin-retrust.{{ item }}.j2"
-    dest: "{{ lookup('env', 'HOME') }}/.config/systemd/user/codex-plugin-retrust.{{ item }}"
+    dest: "{{ codex_home | dirname }}/.config/systemd/user/codex-plugin-retrust.{{ item }}"
     mode: "0644"
   loop: [service, path]
   register: _codex_retrust_units

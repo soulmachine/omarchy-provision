@@ -16,7 +16,7 @@
 		<string>{{ codex_home }}/plugins/cache/{{ p.split('@')[1] }}</string>
 {% endfor %}
 	</array>
-	<key>StandardOutPath</key><string>{{ lookup('env', 'HOME') }}/Library/Logs/codex-plugin-retrust.log</string>
-	<key>StandardErrorPath</key><string>{{ lookup('env', 'HOME') }}/Library/Logs/codex-plugin-retrust.log</string>
+	<key>StandardOutPath</key><string>{{ codex_home | dirname }}/Library/Logs/codex-plugin-retrust.log</string>
+	<key>StandardErrorPath</key><string>{{ codex_home | dirname }}/Library/Logs/codex-plugin-retrust.log</string>
 </dict>
 </plist>
