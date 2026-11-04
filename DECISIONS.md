@@ -538,3 +538,13 @@
 **Justification:** Frank chose the mise channel when asked. cf went to npm only because mise's "latest" skips prereleases (Q51); agent-desktop's releases are not prereleases.
 **Outcome:** applied
 **Ref:** (pending)
+
+## Q54 — interactive/omarchy-server — deviation
+
+**Question:** Should the nightly run upgrade and reboot a host that serves the fleet (PostgreSQL standby, etcd, Vaultwarden)?
+**Options considered:** upgrade and reboot every host each night / skip both on a host marked as a server
+**Chosen:** The pacman role skips `omarchy-update -y` and the reboot check when `/etc/omarchy-server` exists. coding-agent's `devops/mac-mini-2018-omarchy/install.sh` writes the marker and installs that host's own weekly upgrade; its reboots happen only on Frank's go, through `reboot-safely.sh`. The base package installs still run.
+**Decided-by:** human
+**Justification:** On 2026-10-16 and 2026-10-21 the handler rebooted mac-mini-2018-omarchy at about 02:15 with no Patroni switchover first. coding-agent Q928 records Frank's choice. Not synced to macbook-provision or ubuntu-provision: the marker exists only on Omarchy.
+**Outcome:** applied
+**Ref:** coding-agent Q928, Q931
