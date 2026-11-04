@@ -41,7 +41,7 @@ servers run it. Omarchy does not install kimi-code (Q10), so there is no kimi ha
   role prints a reminder when it installs the plugin: open `/hooks` in `codex` and trust the six
   context-mode hooks. Without the trust, the MCP tools still work; only routing stays quiet. After that, each refresh re-trusts hooks an upstream change marks `modified`, and settles the
   plugin cache first (`.npmrc` guard, dependency install, no `.bin` symlinks) with
-  `roles/codex/files/codex-plugin-retrust.py`, so updates run without a review (coding-agent Q759).
+  `roles/codex/files/codex-plugin-retrust.py`, so updates run without a review (coding-agent Q759). The codex role's `codex-plugin-retrust` watcher (a WatchPaths LaunchAgent, a systemd `.path` unit on Linux) also runs the helper 30 s after Codex rebuilds the cache by itself at session start (coding-agent Q899).
 - **Copilot prints a deprecation warning.** Direct repo installs are deprecated in favour of
   `plugin@marketplace`, but upstream ships no Copilot marketplace yet. Its Claude marketplace
   serves the Claude bundle, so `owner/repo:configs/copilot-cli` is still the documented path.
