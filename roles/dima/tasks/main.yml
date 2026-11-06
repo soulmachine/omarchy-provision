@@ -9,3 +9,5 @@
     tasks_from: tool
   vars:
     mise_tool: "npm:dimcode-alpha"
+    # mise refuses a package with few npm downloads until it is approved (tested 2026-11-06).
+    mise_opts: allow_low_downloads=true
