@@ -19,6 +19,8 @@ servers run it. Omarchy does not install kimi-code (Q10), so there is no kimi ha
     refresh.
   - pi: none here; the pi role installs and refreshes the package (see below).
   - oh-my-pi: `omp plugin list --json` against `npm view context-mode version`, the ponytail gate.
+    v2's pi extension serves the tools in process; the role deletes v1's `context-mode` entry
+    from `~/.omp/agent/mcp.json` (it names the removed `server.bundle.mjs`).
   - Copilot CLI: `~/.copilot/hooks/context-mode.json` must name the package that `context-mode`
     resolves to; otherwise the role reruns `context-mode setup --yes --agents copilot-cli`. That
     also repairs the absolute node paths setup writes, after mise moves to a new node.
