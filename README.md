@@ -122,6 +122,7 @@ pre-commit run --all-files
 | copilot | GitHub Copilot CLI（Omarchy 的 mise 工具 `copilot`）；m2 上的 `cliproxy-tier` 把它的 stub 换成走网关的 shim |
 | crush | Crush（Charm，Omarchy 的 mise 工具 `crush`）；`~/.config/crush/crushrc` 里的网关 provider 由 `cliproxy-tier` 写入 |
 | gemini | Gemini CLI（Omarchy 的 mise 工具 `gemini`）；`gemini` 本身经网关（`cliproxy-tier` 写入 `~/.local/bin/gemini` shim 和 `~/.gemini` 里的网关配置），用 Google 登录时用 `gemini-origin`（`~/.gemini-origin`）（依赖 nodejs） |
+| dima | Dim 的 Rust CLI（mise 工具 `npm:dimcode-alpha`，这里 npm 的全局目录是 root 的 `/usr`；不写 stub，`dima` 来自 mise shims）；`dima` 本身经网关（`cliproxy-tier` 把网关写进 dima 自己的存储 `~/.dimcode-alpha`，作为它的 Custom Provider），Dim OAuth 登录在同一个 `/models` 里选（coding-agent Q1046）（依赖 nodejs） |
 | grok | Grok CLI（Omarchy 的 mise 工具 `npm:@xai-official/grok`）；`grok` 本身经网关（`cliproxy-tier` 把网关配置写入 `~/.grok`），用 xAI 登录时用 `grok-origin`（`~/.grok-origin`）（依赖 nodejs） |
 | openclaw | OpenClaw：`omarchy-install-openclaw-cli`（pacman `openclaw`）；onboarding 由 m2 上的 `cliproxy-tier` 负责，未 onboarding 时只打印提示；daemon 跑的 Node 或 OpenClaw 版本过期时用 `openclaw gateway install --force` 重写并重启 |
 | dsh | DeepSeek Harness（mise 工具 `npm:@deepseek-ai/dsh`，另装 mise 工具 `pnpm`，因为 `dsh plugin` 靠 PATH 上的 pnpm 装插件）；按 `roles/dsh/vars/main.yml` 每次对 `web`、`tui` 两个 profile 的每个 npm 插件跑 `dsh plugin --profile <p> add <spec>@latest`：缺的就装，旧的就升级，且都经过 dsh 的兼容性检查（`update` 不检查）；git 插件 `dsh-purge`（上游 `github:HunYiSage/dsh-purge`；`mmparko` 镜像停在 1.1.71，其 `{{cwd}}` 在 dsh 0.2.1-rc.2 上让每轮对话失败）装好后改用 `update dsh-purge` 拉到分支最新提交，其 postinstall 由 profile 的 `pnpm-workspace.yaml` 里 `allowBuilds: {dsh-purge: false}` 跳过（`dsh plugin add` 自己会把它加进 bundles；profile 层 `cordis.patch.yml` 里的本体 insert 由插件在每次 dsh 启动时自己补上）。按 `pnpm-lock.yaml` 前后校验和判断变更（不到一天的新版本被 pnpm 的 minimumReleaseAge 挡住，下次再装）。dsh 拒绝的插件（如与当前 dsh 不兼容的 `dsh-find-plugin`，或要求更新 dsh 的插件新版本）只打印警告并保留已装版本，等兼容版本发布后自动装上 |
@@ -181,6 +182,7 @@ macbook-provision 里没有移植的 role：`host-facts`、`shell`、`omarchy`�
 | copilot | mise `copilot`（aqua） | stub `~/.local/bin/copilot` |
 | crush | mise `crush`（aqua） | stub `~/.local/bin/crush` |
 | gemini | mise `gemini`（npm） | stub `~/.local/bin/gemini` |
+| dima | mise `npm:dimcode-alpha` | mise shim，没有 stub |
 | grok | mise `npm:@xai-official/grok` | stub `~/.local/bin/grok`；首次运行时原生二进制下载到 `~/.grok/bin`；默认经网关 |
 | openclaw | `omarchy-install-openclaw-cli`（pacman `openclaw`） | `/usr/bin/openclaw` |
 | dsh | mise `npm:@deepseek-ai/dsh`（加 `pnpm`） | stub `~/.local/bin/dsh`；插件在 `~/.dsh/profiles/<profile>/` |

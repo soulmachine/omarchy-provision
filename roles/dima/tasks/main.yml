@@ -1,0 +1,11 @@
+---
+# Dim's Rust CLI (`dima`, npm `dimcode-alpha`) as a mise tool, like Omarchy's other npm CLIs: npm's global prefix
+# here is the root-owned /usr. No mise_cmd, so no ~/.local/bin stub; mise's shims serve `dima`. The mise role's
+# `mise up` keeps it current. `cliproxy-tier <host>` on mac-mini-m2 writes the gateway into dima's own store as
+# its Custom Provider (coding-agent Q1046, ~/coding-agent/devops/cliproxyapi/gateway-policy.md).
+- name: Ensure dima is installed through mise
+  ansible.builtin.include_role:
+    name: mise
+    tasks_from: tool
+  vars:
+    mise_tool: "npm:dimcode-alpha"
