@@ -27,8 +27,8 @@ ssh -o BatchMode=yes -o ConnectTimeout=15 <host> \
   updater. The `mise` role's `mise up` is the only other upgrade call, for single-role runs.
 - **Self-update tasks: diff state, don't grep output.** A task that runs an installer measures a
   version, ledger or `mise ls --json` before and after, and sets `changed_when` on the difference.
-- **The gateway files are read-only here.** The agents' gateway settings, the `copilot` and `gemini`
-  shims and the `*-origin` wrappers in `~/.local/bin` belong to `cliproxy-tier-host.py` in coding-agent
+- **The gateway files are read-only here.** The agents' gateway settings, the `copilot`
+  shim and the `*-origin` wrappers in `~/.local/bin` belong to `cliproxy-tier-host.py` in coding-agent
   `devops/cliproxyapi/`, run from mac-mini-m2. A role that needs claude's gateway settings fails when
   they are missing, and never writes them. The Omarchy patches, the launcher's
   included, belong to the `omarchy-cliproxy` role.

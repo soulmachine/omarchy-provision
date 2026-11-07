@@ -9,7 +9,7 @@
 # kimi-code is absent because Omarchy does not install it (DECISIONS Q10).
 # Hermes, Crush and Grok are absent: upstream has no adapter for them (README).
 #
-# The Gemini and Copilot hooks and MCP servers run the `context-mode` CLI, an
+# The Copilot hooks and MCP servers run the `context-mode` CLI, an
 # Omarchy mise tool with its ~/.local/bin stub, so it comes first. On Linux,
 # Node >= 22.5 gives it the built-in `node:sqlite`, so it needs no native build.
 - name: Install the context-mode CLI through mise
@@ -34,9 +34,6 @@
 
 - name: Install context-mode into oh-my-pi
   ansible.builtin.include_tasks: omp.yml
-
-- name: Install context-mode into Gemini CLI
-  ansible.builtin.include_tasks: gemini.yml
 
 - name: Install context-mode into Copilot CLI
   ansible.builtin.include_tasks: copilot.yml

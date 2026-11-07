@@ -121,7 +121,6 @@ pre-commit run --all-files
 | pi | pi coding agent（Omarchy 的 mise 工具 `pi`），并下发 `~/.pi/agent/settings.json` |
 | copilot | GitHub Copilot CLI（Omarchy 的 mise 工具 `copilot`）；m2 上的 `cliproxy-tier` 把它的 stub 换成走网关的 shim |
 | crush | Crush（Charm，Omarchy 的 mise 工具 `crush`）；`~/.config/crush/crushrc` 里的网关 provider 由 `cliproxy-tier` 写入 |
-| gemini | Gemini CLI（Omarchy 的 mise 工具 `gemini`）；`gemini` 本身经网关（`cliproxy-tier` 写入 `~/.local/bin/gemini` shim 和 `~/.gemini` 里的网关配置），用 Google 登录时用 `gemini-origin`（`~/.gemini-origin`）（依赖 nodejs） |
 | dima | Dim 的 Rust CLI（mise 工具 `npm:dimcode-alpha`，这里 npm 的全局目录是 root 的 `/usr`；不写 stub，`dima` 来自 mise shims）；`dima` 本身经网关（`cliproxy-tier` 把网关写进 dima 自己的存储 `~/.dimcode-alpha`，作为它的 Custom Provider），Dim OAuth 登录在同一个 `/models` 里选（coding-agent Q1046）（依赖 nodejs） |
 | grok | Grok CLI（Omarchy 的 mise 工具 `npm:@xai-official/grok`）；`grok` 本身经网关（`cliproxy-tier` 把网关配置写入 `~/.grok`），用 xAI 登录时用 `grok-origin`（`~/.grok-origin`）（依赖 nodejs） |
 | openclaw | OpenClaw：`omarchy-install-openclaw-cli`（pacman `openclaw`）；onboarding 由 m2 上的 `cliproxy-tier` 负责，未 onboarding 时只打印提示；daemon 跑的 Node 或 OpenClaw 版本过期时用 `openclaw gateway install --force` 重写并重启 |
@@ -133,10 +132,10 @@ pre-commit run --all-files
 | playwright-cli | Playwright CLI：mise `npm:@playwright/cli`，并安装其 skill（依赖 playwright） |
 | agent-desktop | [agent-desktop](https://github.com/vercel-labs/agent-desktop)：agent 用的 computer use CLI，按 accessibility tree 观察并操作桌面 app；mise `npm:agent-desktop`，`allow_builds=agent-desktop` 让 mise 跑它的 postinstall（换上原生二进制），由 mise role 的 `mise up` 升级。Wayland 下需要 `at-spi2-core` 与 `wl-clipboard`，窗口控制只支持 X11（Q53，上游 Q310）（依赖 nodejs） |
 | hermes | Hermes 个人 agent（Nous Research）的 CLI 版：`omarchy-install-hermes-cli`（mise pipx）；`~/.hermes/SOUL.md` 链接到 `~/.agents/AGENTS.md` |
-| browseros-neo | [BrowserOS neo](https://browseros.com)（给 agent 用的 Chromium 浏览器）：pacman `fuse2`，下载上游 `https://cdn.browseros.com/download/BrowserOS_neo.AppImage` 到 `~/.local/share/browseros-neo/`（每次下载、内容变了才算变更），并写入启动器的 `.desktop`；把 MCP 端点 `http://127.0.0.1:9010/mcp`（neo 的 proxy 端口；文档里的 9200 不对）注册给每个已安装的 agent：Claude Code、codex、gemini、copilot、grok、hermes 用各自的 `mcp add`，kimi、omp、opencode、crush 合并进各自的 JSON 配置；URL 不对就替换（pi 不支持 MCP）；首次安装上游 `browseros-neo` skill，之后由运行中的 neo 自己更新。不开机自启（依赖 claude-code、nodejs） |
-| hindsight | 把每个 agent 接到 mac-mini-m2 上的 [Hindsight](https://github.com/vectorize-io/hindsight) 记忆服务（`~/coding-agent/devops/hindsight-server`）：URL 按 `ansible_hostname` 选（m2 用 loopback，同局域网用 `192.168.31.20`，远程主机用本地 `hindsight-relay`：先 Tailscale，不通再走 m2 的反向 SSH 隧道 `:18888`；同一 relay 的第二个实例在 `127.0.0.1:8317` 为 CLIProxyAPI 网关做同样的事，隧道 `:18317`，规则见 coding-agent `devops/infra-architecture.html`），写进 `~/.hindsight/coding-agent.json`；token 由 m2 的 `push-token.sh` 推送；`npx @vectorize-io/hindsight-coding-agents install all` 只在版本落后或某 agent 没接上时跑；gemini、hermes、omp、crush 用运行时自带的 stdio MCP（依赖 nodejs） |
+| browseros-neo | [BrowserOS neo](https://browseros.com)（给 agent 用的 Chromium 浏览器）：pacman `fuse2`，下载上游 `https://cdn.browseros.com/download/BrowserOS_neo.AppImage` 到 `~/.local/share/browseros-neo/`（每次下载、内容变了才算变更），并写入启动器的 `.desktop`；把 MCP 端点 `http://127.0.0.1:9010/mcp`（neo 的 proxy 端口；文档里的 9200 不对）注册给每个已安装的 agent：Claude Code、codex、copilot、grok、hermes 用各自的 `mcp add`，kimi、omp、opencode、crush 合并进各自的 JSON 配置；URL 不对就替换（pi 不支持 MCP）；首次安装上游 `browseros-neo` skill，之后由运行中的 neo 自己更新。不开机自启（依赖 claude-code、nodejs） |
+| hindsight | 把每个 agent 接到 mac-mini-m2 上的 [Hindsight](https://github.com/vectorize-io/hindsight) 记忆服务（`~/coding-agent/devops/hindsight-server`）：URL 按 `ansible_hostname` 选（m2 用 loopback，同局域网用 `192.168.31.20`，远程主机用本地 `hindsight-relay`：先 Tailscale，不通再走 m2 的反向 SSH 隧道 `:18888`；同一 relay 的第二个实例在 `127.0.0.1:8317` 为 CLIProxyAPI 网关做同样的事，隧道 `:18317`，规则见 coding-agent `devops/infra-architecture.html`），写进 `~/.hindsight/coding-agent.json`；token 由 m2 的 `push-token.sh` 推送；`npx @vectorize-io/hindsight-coding-agents install all` 只在版本落后或某 agent 没接上时跑；hermes、omp、crush 用运行时自带的 stdio MCP（依赖 nodejs） |
 | ponytail | 给所有 agent 安装 [ponytail](https://github.com/DietrichGebert/ponytail) 插件：Claude Code / Codex / OpenCode / pi / oh-my-pi / Hermes 各用其原生安装方式 |
-| context-mode | 给所有 agent 安装 [context-mode](https://github.com/mksglu/context-mode)：Claude Code / Codex / OpenCode / pi / oh-my-pi / Gemini CLI / Copilot CLI / OpenClaw 各用其原生安装方式；Hermes、Crush、Grok 上游没有适配，不装 |
+| context-mode | 给所有 agent 安装 [context-mode](https://github.com/mksglu/context-mode)：Claude Code / Codex / OpenCode / pi / oh-my-pi / Copilot CLI / OpenClaw 各用其原生安装方式；Hermes、Crush、Grok 上游没有适配，不装 |
 | paseo | agent 多路复用：mise `npm:@getpaseo/cli`（CLI + daemon）；daemon 由本 role 管理的 systemd user unit `paseo-daemon.service`（`paseo daemon run`）常驻；开启 relay（配对仍需手动 `paseo daemon pair`），打开 `pluginsEnabled` 并安装插件 `npm:@oliexe/paseo-bots`；daemon 没在运行时在 play 末尾报错；tag `agent-multiplexer`（依赖 claude-code、codex） |
 | orca | [Orca](https://onorca.dev)（多 agent IDE）：AUR `stably-orca-bin`（`pacman -Q` 探测，缺失时 `yay -S --needed --noconfirm`，由 `omarchy-update` 升级；包把 AppImage 解到 `/opt/stably-orca`，CLI 是 `/opt/stably-orca/resources/bin/orca-ide`，不在 PATH 上）；再用上游的 `orca-ide serve service install --port 6768` 装 systemd user unit `orca-serve`（`--supervise --no-pairing`），只在服务不是 `live` 时安装；当前 Orca 还没有这个子命令时跳过并提示；服务未 live 时在 play 末尾报错。配对仍需手动；tag `agent-multiplexer`（依赖 claude-code、codex） |
 | ghostty | 终端模拟器：`omarchy-install-terminal ghostty`，同时把它设为 Omarchy 的默认终端（取代 foot） |
@@ -151,14 +150,14 @@ pre-commit run --all-files
 | tmux | 终端复用器（pacman）；tag `terminal-multiplexer`（`pacman` role 的基础包里也有，重复无害） |
 | herdr | Omarchy 自带的 pacman 包，本 role 只确认它在、装 herdr skill、在 `~/.bashrc` 加终端标题函数，并用 herdr-rename-hook skill 的 `install.sh` 接上 `/rename` 钩子（Claude Code 与 Codex 的 `/rename` 同步成 Herdr 的 agent、pane 和 tab 名）；tag `terminal-multiplexer` |
 | eza | 在 `~/.bashrc` 末尾（Omarchy rc 之后）重定义 `ls`、`lt`：没给路径时补 `.`。否则 eza 在非 tty 的 stdin 上会读 stdin 里的文件名，agent 的 shell 卡住或什么都不列。辅助函数叫 `eza_ls`，不以 `_` 开头，因为 Claude Code 的 shell 快照会丢掉 `_` 开头的函数 |
-| omarchy-cliproxy | 只在有 Agents bar（`/usr/bin/omarchy-agent-usage-update`）的网关主机（`~/.claude/settings.json` 里有 m2 写入的网关配置、没有原生 Claude 登录）上运行：装三个 Omarchy 补丁（`omarchy-agent` 启动器直接用经网关的 `claude`、`codex`、`copilot`、`gemini`；Agents bar 的 Claude、Codex 用量采集器读网关的用量文件）、打补丁脚本 `/usr/local/bin/omarchy-cliproxy-patch` 和 pacman hook（Omarchy 升级后重新打补丁；补丁打不上时在 play 末尾报错）；再装 systemd user timer `omarchy-cliproxy-usage.timer`，每 5 分钟 ssh 到 mac-mini-m2，从 stdin 运行 `cliproxy-usage-probe`，m2 只返回用量结果、不返回 token，写入 `~/.local/state/cliproxy/{claude,codex}-usage.json` 并刷新 Agents bar |
+| omarchy-cliproxy | 只在有 Agents bar（`/usr/bin/omarchy-agent-usage-update`）的网关主机（`~/.claude/settings.json` 里有 m2 写入的网关配置、没有原生 Claude 登录）上运行：装三个 Omarchy 补丁（`omarchy-agent` 启动器直接用经网关的 `claude`、`codex`、`copilot`；Agents bar 的 Claude、Codex 用量采集器读网关的用量文件）、打补丁脚本 `/usr/local/bin/omarchy-cliproxy-patch` 和 pacman hook（Omarchy 升级后重新打补丁；补丁打不上时在 play 末尾报错）；再装 systemd user timer `omarchy-cliproxy-usage.timer`，每 5 分钟 ssh 到 mac-mini-m2，从 stdin 运行 `cliproxy-usage-probe`，m2 只返回用量结果、不返回 token，写入 `~/.local/state/cliproxy/{claude,codex}-usage.json` 并刷新 Agents bar |
 | always-on | 常驻服务器配置：屏蔽五个 sleep target、在 Omarchy 菜单隐藏 Suspend、SDDM 自动重登（`/etc/sddm.conf.d/zz-relogin.conf`）、`/etc/sysctl.d/zz-always-on.conf`、`hosts-pin` 定时器（每 5 分钟把 `mac-mini-m2.local` 按 mDNS 结果写进 `/etc/hosts`，供自带 DNS 解析器的 codex、grok、crush 使用，coding-agent Q1057）、移除旧的每周日 `omarchy-weekly-update` 重启检查（重启改由 `pacman` role 负责）、屏保延迟 86400 秒、sudoers 的 `verifypw=any` |
 
 ### 不移植的内容
 
 这些东西留在 mac-mini-2018-omarchy 上手工维护，记录在 `~/.agents/docs/fleet-ssh.md`，因为它们属于这一台机器而不是每台 Omarchy 主机：
 
-- **`~/.local/bin` 里的 `copilot`、`gemini` shim 和 `*-origin` 包装器**，以及各 agent 的网关 settings：由 mac-mini-m2 上的 `cliproxy-tier-host.py` 写入。本仓库**从不**写这些文件。`/usr/bin/omarchy-agent` 的补丁归 `omarchy-cliproxy` role。
+- **`~/.local/bin` 里的 `copilot` shim 和 `*-origin` 包装器**，以及各 agent 的网关 settings：由 mac-mini-m2 上的 `cliproxy-tier-host.py` 写入。本仓库**从不**写这些文件。`/usr/bin/omarchy-agent` 的补丁归 `omarchy-cliproxy` role。
 - **arch-mact2** 的 pre-refresh hook（只有 T2 硬件需要）。
 - **Sunshine**：Omarchy 的安装器有 bug，unit、web app 和 ufw 规则是手工做的一次性工作。
 
@@ -181,7 +180,6 @@ macbook-provision 里没有移植的 role：`host-facts`、`shell`、`omarchy`�
 | pi | mise `pi` | stub `~/.local/bin/pi` |
 | copilot | mise `copilot`（aqua） | stub `~/.local/bin/copilot` |
 | crush | mise `crush`（aqua） | stub `~/.local/bin/crush` |
-| gemini | mise `gemini`（npm） | stub `~/.local/bin/gemini` |
 | dima | mise `npm:dimcode-alpha` | mise shim，没有 stub |
 | grok | mise `npm:@xai-official/grok` | stub `~/.local/bin/grok`；首次运行时原生二进制下载到 `~/.grok/bin`；默认经网关 |
 | openclaw | `omarchy-install-openclaw-cli`（pacman `openclaw`） | `/usr/bin/openclaw` |
@@ -219,7 +217,7 @@ Omarchy 支持的 agent 里，**Cursor CLI 和 Muse Code 不装**：前者的模
 
 - **Codex 的 hook 信任**是一次性的、每台机器各做一次：跑 `codex`、打开 `/hooks`，审核并信任 ponytail 的三个生命周期 hook，然后开一个新 thread。
 - **opencode 的 provider 认证**没有做：安装器带的是 `--skip-auth`。
-- **新装的 agent 要在 m2 上跑一次 `cliproxy-tier <host>`。** claude、codex、kimi、gemini、copilot、grok（含 `*-origin` 包装器）、crush、openclaw 的网关配置以及 OpenClaw 的 onboarding 都由它完成，而它只处理已经装好的 agent。
+- **新装的 agent 要在 m2 上跑一次 `cliproxy-tier <host>`。** claude、codex、kimi、copilot、grok（含 `*-origin` 包装器）、crush、openclaw 的网关配置以及 OpenClaw 的 onboarding 都由它完成，而它只处理已经装好的 agent。
 - **rename 钩子装上或更新后**，Codex 下次启动会问是否信任这个钩子，选「Trust all and continue」；已经在跑的 Claude Code 会话要打开一次 `/hooks` 或重启才会用上。
 - **agent-reach 只配好了零配置的渠道。** 其余渠道要 cookie 或点一下浏览器扩展。要补齐就自己交互式跑一次 `agent-reach doctor`。
 - **paseo 的配对**：`paseo daemon pair`。
