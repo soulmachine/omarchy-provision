@@ -50,6 +50,55 @@
     mode: "0644"
   notify: Apply the sysctls
 
+# codex, grok and crush resolve names themselves and get no answer for mac-mini-m2.local, the
+# gateway (coding-agent Q1057). A timer pins it in /etc/hosts from glibc's mDNS answer.
+- name: Install the hosts-pin script
+  become: true
+  ansible.builtin.copy:
+    src: hosts-pin
+    dest: /usr/local/bin/hosts-pin
+    mode: "0755"
+  notify: Pin the LAN names
+
+- name: Install the hosts-pin units
+  become: true
+  ansible.builtin.copy:
+    dest: "/etc/systemd/system/{{ item.name }}"
+    content: "{{ item.content }}"
+    mode: "0644"
+  loop:
+    - name: hosts-pin.service
+      content: |
+        [Unit]
+        Description=Pin LAN .local names in /etc/hosts (coding-agent Q1057)
+        After=avahi-daemon.service network-online.target
+
+        [Service]
+        Type=oneshot
+        ExecStart=/usr/local/bin/hosts-pin mac-mini-m2.local
+    - name: hosts-pin.timer
+      content: |
+        [Unit]
+        Description=Refresh the /etc/hosts pins every 5 minutes
+
+        [Timer]
+        OnBootSec=1min
+        OnUnitActiveSec=5min
+
+        [Install]
+        WantedBy=timers.target
+  loop_control:
+    label: "{{ item.name }}"
+  notify: Pin the LAN names
+
+- name: Enable the hosts-pin timer
+  become: true
+  ansible.builtin.systemd_service:
+    name: hosts-pin.timer
+    enabled: true
+    state: started
+    daemon_reload: true
+
 # The pacman role reboots when one is due (DECISIONS Q14), so the Sunday reboot check that
 # coding-agent Q364 added is retired. These two remove it from a host that still has it.
 - name: Remove the weekly reboot check from cron

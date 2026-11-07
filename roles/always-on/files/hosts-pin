@@ -1,0 +1,18 @@
+#!/bin/bash
+# Pin each LAN .local name in /etc/hosts at the address glibc's mDNS gives it (coding-agent Q1057).
+# codex, grok and crush use their own DNS resolver, which skips nss-mdns but reads /etc/hosts.
+# nss-mdns answers .local before `files` ([NOTFOUND=return]), so getent never sees these pins.
+# Usage: hosts-pin <name>...
+set -euo pipefail
+tag="# hosts-pin"
+for name in "$@"; do
+  ip=$(getent ahostsv4 "$name" | awk 'NR == 1 { print $1 }') || true
+  [ -n "$ip" ] || continue  # asleep or off the LAN: keep the last pin
+  want="$ip $name $tag"
+  grep -qxF "$want" /etc/hosts && continue
+  tmp=$(mktemp)
+  awk -v n="$name" -v t="$tag" '!($2 == n && index($0, t))' /etc/hosts > "$tmp"
+  echo "$want" >> "$tmp"
+  cat "$tmp" > /etc/hosts  # rewrite in place: keeps the file's owner, mode and inode
+  rm -f "$tmp"
+done

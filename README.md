@@ -152,7 +152,7 @@ pre-commit run --all-files
 | herdr | Omarchy 自带的 pacman 包，本 role 只确认它在、装 herdr skill、在 `~/.bashrc` 加终端标题函数，并用 herdr-rename-hook skill 的 `install.sh` 接上 `/rename` 钩子（Claude Code 与 Codex 的 `/rename` 同步成 Herdr 的 agent、pane 和 tab 名）；tag `terminal-multiplexer` |
 | eza | 在 `~/.bashrc` 末尾（Omarchy rc 之后）重定义 `ls`、`lt`：没给路径时补 `.`。否则 eza 在非 tty 的 stdin 上会读 stdin 里的文件名，agent 的 shell 卡住或什么都不列。辅助函数叫 `eza_ls`，不以 `_` 开头，因为 Claude Code 的 shell 快照会丢掉 `_` 开头的函数 |
 | omarchy-cliproxy | 只在有 Agents bar（`/usr/bin/omarchy-agent-usage-update`）的网关主机（`~/.claude/settings.json` 里有 m2 写入的网关配置、没有原生 Claude 登录）上运行：装三个 Omarchy 补丁（`omarchy-agent` 启动器直接用经网关的 `claude`、`codex`、`copilot`、`gemini`；Agents bar 的 Claude、Codex 用量采集器读网关的用量文件）、打补丁脚本 `/usr/local/bin/omarchy-cliproxy-patch` 和 pacman hook（Omarchy 升级后重新打补丁；补丁打不上时在 play 末尾报错）；再装 systemd user timer `omarchy-cliproxy-usage.timer`，每 5 分钟 ssh 到 mac-mini-m2，从 stdin 运行 `cliproxy-usage-probe`，m2 只返回用量结果、不返回 token，写入 `~/.local/state/cliproxy/{claude,codex}-usage.json` 并刷新 Agents bar |
-| always-on | 常驻服务器配置：屏蔽五个 sleep target、在 Omarchy 菜单隐藏 Suspend、SDDM 自动重登（`/etc/sddm.conf.d/zz-relogin.conf`）、`/etc/sysctl.d/zz-always-on.conf`、移除旧的每周日 `omarchy-weekly-update` 重启检查（重启改由 `pacman` role 负责）、屏保延迟 86400 秒、sudoers 的 `verifypw=any` |
+| always-on | 常驻服务器配置：屏蔽五个 sleep target、在 Omarchy 菜单隐藏 Suspend、SDDM 自动重登（`/etc/sddm.conf.d/zz-relogin.conf`）、`/etc/sysctl.d/zz-always-on.conf`、`hosts-pin` 定时器（每 5 分钟把 `mac-mini-m2.local` 按 mDNS 结果写进 `/etc/hosts`，供自带 DNS 解析器的 codex、grok、crush 使用，coding-agent Q1057）、移除旧的每周日 `omarchy-weekly-update` 重启检查（重启改由 `pacman` role 负责）、屏保延迟 86400 秒、sudoers 的 `verifypw=any` |
 
 ### 不移植的内容
 
