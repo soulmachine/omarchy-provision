@@ -53,15 +53,17 @@
     # The script is ours: it prints "patched <file>" only when it changed one, and exits 1
     # when a patch no longer applies, which leaves that file stock. That is reported at the
     # end of the play, not here.
-    # Q665 retired the -gw wrappers. The launcher still patched to start them cannot take the new
-    # patch, so take the old one out first. It stays out of the patch folder, so the hook never applies it.
-    - name: Remove the launcher's retired -gw patch
+    # A launcher still carrying a retired patch cannot take the current one, so take the old one out
+    # first: -gw.patch started the -gw wrappers Q665 retired, -q665.patch started Gemini CLI plain
+    # (it left the fleet, coding-agent Q1059). They stay out of the patch folder, so the hook never applies them.
+    - name: Remove the launcher's retired patches
       become: true
       ansible.builtin.shell: |
-        old="{{ role_path }}/files/retired/omarchy-agent-gw.patch"
-        if patch --dry-run --reverse --force --silent /usr/bin/omarchy-agent "$old" >/dev/null 2>&1; then
-          patch --reverse --force --silent --no-backup-if-mismatch /usr/bin/omarchy-agent "$old" && echo reverted
-        fi
+        for old in "{{ role_path }}"/files/retired/*.patch; do
+          if patch --dry-run --reverse --force --silent /usr/bin/omarchy-agent "$old" >/dev/null 2>&1; then
+            patch --reverse --force --silent --no-backup-if-mismatch /usr/bin/omarchy-agent "$old" && echo "reverted $old"
+          fi
+        done
       register: omarchy_cliproxy_retired
       changed_when: "'reverted' in omarchy_cliproxy_retired.stdout"
 
