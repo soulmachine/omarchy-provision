@@ -85,6 +85,7 @@
   community.general.pacman:
     name:
       - git
+      - git-lfs
       - curl
       - wget
       - jq
@@ -97,6 +98,15 @@
       - gnupg
       - tmux
     state: present
+
+# The global filter `git lfs install` writes; without it a clone checks out LFS pointers, not the files
+# (nickel/company-nickel, coding-agent Q1075).
+- name: Configure the Git LFS filter
+  community.general.git_config:
+    scope: global
+    name: "filter.lfs.{{ item.key }}"
+    value: "{{ item.value }}"
+  loop: "{{ {'clean': 'git-lfs clean -- %f', 'smudge': 'git-lfs smudge -- %f', 'process': 'git-lfs filter-process', 'required': 'true'} | dict2items }}"
 
 # Of the Mac casks, the one with a Linux build that this host wants. Omarchy's VS Code
 # installer also turns off its self-updater and applies the theme, and rewrites those files
