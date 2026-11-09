@@ -11,7 +11,7 @@ the `tailscale` role. Values legitimately differ across hosts: an auth key is ta
 above the interactive guard. A copy in `.env` would give each variable two writers, which is what
 broke `GITHUB_TOKEN` on the Macs in October 2026. The `github`, `typesafe` and `mise` roles read
 them with `lookup('env', ...)`, so they work from either place; a host without those fleet tools
-may set `TYPESAFE_API_KEY` in `.env` instead. See `~/.agents/docs/github-auth.md`.
+may set `TYPESAFE_API_KEY` in `.env` instead. See `~/coding-agent/docs/github-auth.md`.
 
 ## The `dotenv` role
 

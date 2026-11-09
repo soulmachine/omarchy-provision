@@ -155,7 +155,7 @@ pre-commit run --all-files
 
 ### 不移植的内容
 
-这些东西留在 mac-mini-2018-omarchy 上手工维护，记录在 `~/.agents/docs/fleet-ssh.md`，因为它们属于这一台机器而不是每台 Omarchy 主机：
+这些东西留在 mac-mini-2018-omarchy 上手工维护，记录在 `~/coding-agent/docs/fleet-ssh.md`，因为它们属于这一台机器而不是每台 Omarchy 主机：
 
 - **`~/.local/bin` 里的 `copilot` shim 和 `*-origin` 包装器**，以及各 agent 的网关 settings：由 mac-mini-m2 上的 `cliproxy-tier-host.py` 写入。本仓库**从不**写这些文件。`/usr/bin/omarchy-agent` 的补丁归 `omarchy-cliproxy` role。
 - **arch-mact2** 的 pre-refresh hook（只有 T2 硬件需要）。
