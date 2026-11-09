@@ -93,6 +93,7 @@
       - fd
       - tree
       - htop
+      - rclone
       - docker
       - ffmpeg
       - gnupg
