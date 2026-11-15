@@ -122,10 +122,18 @@
   changed_when: false
   check_mode: false
 
+# `unuse` drops the config entry but keeps every install while an old agent session still
+# runs one (measured 2026-11-14), so `uninstall --all` removes them outright.
 - name: Remove the context-mode mise tool
-  ansible.builtin.command: mise unuse -g npm:context-mode
+  ansible.builtin.shell: mise unuse -g npm:context-mode && mise uninstall --all npm:context-mode
   when: "'npm:context-mode' in (context_mode_mise_ls.stdout | from_json)"
   changed_when: true
+
+# The uninstall leaves the version-alias symlinks (1, 2.1, latest) behind.
+- name: Delete the context-mode mise install folder
+  ansible.builtin.file:
+    path: "{{ context_mode_home }}/.local/share/mise/installs/npm-context-mode"
+    state: absent
 
 - name: Look for anything context-mode left behind
   ansible.builtin.shell: |
