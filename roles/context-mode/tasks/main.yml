@@ -69,15 +69,20 @@
     cmd: npm uninstall --prefix {{ context_mode_pi_prefix }} context-mode
     removes: "{{ context_mode_pi_prefix }}/node_modules/context-mode"
 
+# omp's shebang runs its runtime from PATH, which an Ansible command does not carry.
 - name: List oh-my-pi plugins
-  ansible.builtin.command: "{{ context_mode_home }}/.bun/bin/omp plugin list --json"
+  ansible.builtin.command: "{{ context_mode_omp_dir }}/omp plugin list --json"
+  environment:
+    PATH: "{{ context_mode_omp_dir }}:{{ lookup('env', 'PATH') }}"
   register: context_mode_omp_plugins
   failed_when: false
   changed_when: false
   check_mode: false
 
 - name: Uninstall the context-mode oh-my-pi plugin
-  ansible.builtin.command: "{{ context_mode_home }}/.bun/bin/omp plugin uninstall context-mode"
+  ansible.builtin.command: "{{ context_mode_omp_dir }}/omp plugin uninstall context-mode"
+  environment:
+    PATH: "{{ context_mode_omp_dir }}:{{ lookup('env', 'PATH') }}"
   when:
     - context_mode_omp_plugins.rc == 0
     - >-
@@ -104,6 +109,24 @@
   register: context_mode_cli
   changed_when: "'removed ' in context_mode_cli.stdout"
 
+# Omarchy installed the CLI as a mise tool with a ~/.local/bin stub. The stub goes first:
+# `mise unuse` keeps an install that a stub still names.
+- name: Delete the context-mode CLI stub
+  ansible.builtin.file:
+    path: "{{ context_mode_home }}/.local/bin/context-mode"
+    state: absent
+
+- name: Read the mise tools
+  ansible.builtin.command: mise ls --json
+  register: context_mode_mise_ls
+  changed_when: false
+  check_mode: false
+
+- name: Remove the context-mode mise tool
+  ansible.builtin.command: mise unuse -g npm:context-mode
+  when: "'npm:context-mode' in (context_mode_mise_ls.stdout | from_json)"
+  changed_when: true
+
 - name: Look for anything context-mode left behind
   ansible.builtin.shell: |
     grep -ls '"context-mode@context-mode"' {{ context_mode_home }}/.claude/plugins/installed_plugins.json
@@ -112,7 +135,9 @@
     for p in {{ context_mode_leftovers | join(' ') }} \
         {{ context_mode_pi_prefix }}/node_modules/context-mode \
         {{ context_mode_home }}/.omp/plugins/node_modules/context-mode \
-        {{ context_mode_node_installs }}/*/lib/node_modules/context-mode; do
+        {{ context_mode_node_installs }}/*/lib/node_modules/context-mode \
+        {{ context_mode_home }}/.local/bin/context-mode \
+        {{ context_mode_home }}/.local/share/mise/installs/npm-context-mode; do
       [ -e "$p" ] && echo "$p"
     done
     true

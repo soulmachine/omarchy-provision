@@ -15,7 +15,7 @@ This role removes context-mode from every agent the old install role put it into
 | pi | the `pi` role no longer lists `npm:context-mode`; this role runs `npm uninstall` in pi's prefix |
 | oh-my-pi | `omp plugin uninstall context-mode` |
 | OpenClaw | `openclaw plugins uninstall context-mode`, where OpenClaw is onboarded |
-| global CLI | `npm uninstall -g context-mode`, last, because the hooks called it |
+| global CLI | the `~/.local/bin` stub, then `mise unuse -g npm:context-mode`, last, because the hooks called it |
 
 Each step reads state first and does nothing on a clean host. The last task fails if anything is
 left. The JSON files carry API keys: the script never prints them and keeps each file's mode.
